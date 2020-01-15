@@ -1,5 +1,5 @@
-@(nodes: Set[NodeInfo], namespaces: List[NamespaceInfo])
-@main("index", namespaces) {
+@(host: String, port: Int, nodes: Set[NodeInfo], namespaces: List[NamespaceInfo])
+@main("cluster", host, port, namespaces) {
 <section class="hero welcome is-small">
 <div class="columns">
 <div class="column is-12">
