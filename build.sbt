@@ -1,4 +1,4 @@
-name := """play-scala-seed"""
+name := """aero-ui"""
 organization := "com.example"
 
 version := "1.0-SNAPSHOT"
