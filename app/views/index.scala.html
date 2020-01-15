@@ -1,0 +1,88 @@
+@(nodes: Set[NodeInfo], namespaces: List[NamespaceInfo])
+@main("cluster", namespaces) {
+<section class="hero welcome is-small">
+<div class="columns">
+<div class="column is-12">
+
+            <div class="container">
+                <h1 class="is-info is-size-5 is-4">
+                    CLUSTER OVERVIEW
+                </h1>
+            </div>
+</div>
+</div>
+</section>
+<section class="cluster-info">
+    <div class="columns">
+        <div class="column is-12">
+            <div class="card events-card">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        Nodes
+                    </p>
+                </header>
+                <div class="card-table">
+                    <div class="content">
+                        <table class="table is-fullwidth is-striped">
+                            <tr>
+                                <th>#</th>
+                                <th>ID</th>
+                                <th>Host</th>
+                                <th>Port</th>
+                                <th>Version</th>
+                                <th>Active</th>
+                            </tr>
+                            <tbody>
+                            @for((node, index) <- nodes.zipWithIndex) {
+                            <tr>
+                                <td>@{index+1}</td>
+                                <td>@node.name</td>
+                                <td>@node.host.name</td>
+                                <td>@node.host.port</td>
+                                <td>@node.version</td>
+                               <td> <span class="tag is-success">@node.isActive</span></td>
+                                <td class="level-right"><a class="show-config button is-small" href="#">Show config</a></td>
+                            </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card events-card">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        Namespaces
+                    </p>
+                </header>
+                <div class="card-table">
+                    <div class="content">
+                        <table class="table is-fullwidth is-striped">
+                            <tr>
+                                <th>Name</th>
+                                <th>Storage engine</th>
+                                <th>Records</th>
+                                <th>Replication factor</th>
+                            </tr>
+                            <tbody>
+                            @for((namespace, index) <- namespaces.zipWithIndex) {
+                            <tr>
+                                <td>@namespace.name</td>
+                                <td>@namespace.getStorageEngine</td>
+                                <td>@namespace.getObjects</td>
+                                <td>@namespace.getReplicationFactor</td>
+                                <td class="level-right"><a class="show-config button is-small" href="#">Open</a></td>
+                            </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <footer class="card-footer">
+                    <a href="#" class="card-footer-item">View All</a>
+                </footer>
+            </div>
+        </div>
+    </div>
+</section>
+}

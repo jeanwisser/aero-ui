@@ -1,0 +1,14 @@
+@(elements: helper.FieldElements)
+
+<div class="field is-horizontal @if(elements.hasErrors) {error}">
+    <div class="field-label is-normal">
+        <label class="label">@elements.label</label>
+    </div>
+
+    <div class="field-body">
+        <p class="control">
+            @elements.input
+            <span class="errors">@elements.errors.mkString(", ")</span>
+        </p>
+    </div>
+</div>
