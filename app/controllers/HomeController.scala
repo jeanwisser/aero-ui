@@ -47,7 +47,7 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
       case Success(client) =>
         ClusterOverview.getNodes(client).map { nodes =>
           val nodesInfo = nodes.map(node => ClusterOverview.getNodeInformation(node)).toSet
-          val namespacesInfo = ClusterOverview.getNamespacesInformation(nodes(0)).values.toList
+          val namespacesInfo = ClusterOverview.getNamespacesInformation(nodes(0))
           Ok(views.html.cluster(host, port, nodesInfo, namespacesInfo))
         }
       case Failure(exception) => index(Some(exception.getMessage))(request)
@@ -59,7 +59,7 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
       Aerospike(SeedNode(host, port)) match {
         case Success(client) =>
           ClusterOverview.getNodes(client).map { nodes =>
-            val namespacesInfo = ClusterOverview.getNamespacesInformation(nodes(0)).values.toList
+            val namespacesInfo = ClusterOverview.getNamespacesInformation(nodes(0))
             val setsInfo = ClusterOverview.getSetsInformation(nodes(0), namespaceName).values.toList
             Ok(views.html.namespace(host, port, namespacesInfo, setsInfo, namespaceName))
           }

@@ -11,11 +11,11 @@ import scala.util.{Failure, Success, Try}
 
 object ClusterOverview {
 
-  def getNamespacesInformation(node: Node): Map[String, NamespaceInfo] = {
+  def getNamespacesInformation(node: Node): List[NamespaceInfo] = {
     val namespaces = Info.request(null, node, "namespaces").split(';')
     namespaces.map { namespace =>
       NamespaceInfo(namespace, Info.request(null, node, s"namespace/$namespace"))
-    }.map(n => n.name -> n).toMap
+    }.toList
   }
 
   def getSetsInformation(node: Node, namespace: String): Map[String, SetInfo] = {

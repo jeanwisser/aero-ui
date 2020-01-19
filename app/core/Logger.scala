@@ -1,7 +1,5 @@
 package core
 
-import org.joda.time.DateTime
-
 object Logger {
 
   def debug(step: String, message: String): Unit = {
@@ -21,7 +19,7 @@ object Logger {
   }
 
   def error(step: String, message: String, e: Exception): Unit = {
-    log("ERROR", step, message + " - " + e.getMessage())
+    log("ERROR", step, message + " - " + e)
   }
 
   private def log(level: String, step: String, message: String): Unit = {
