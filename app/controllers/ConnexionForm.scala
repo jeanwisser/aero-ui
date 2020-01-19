@@ -8,8 +8,8 @@ object ConnexionForm {
 
   val form = Form(
     mapping(
-      "host" -> nonEmptyText,
-      "port" -> number(min = 0, max = 65535)
+      "Host" -> nonEmptyText,
+      "Port" -> number(min = 0, max = 65535)
     )(Data.apply)(Data.unapply)
   )
 }

@@ -1,4 +1,4 @@
-@(connexionForm: Form[ConnexionForm.Data], postUrl: Call)(implicit request: MessagesRequestHeader)
+@(connexionForm: Form[ConnexionForm.Data], postUrl: Call, exception: Option[String])(implicit request: MessagesRequestHeader)
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,24 +21,26 @@
             </div>
         </div>
         <div class="columns is-centered">
-            <div class="column is-6">
+            <div class="column is-4">
+                @if(exception.isDefined){
+                <div class="notification is-danger is-size-7">
+                    <button class="delete"></button>
+                    @exception
+                </div>
+                }
+            </div>
+        </div>
+        <div class="columns is-centered">
+            <div class="column is-3">
                 @import helper._
                 @implicitField = @{ helper.FieldConstructor(customFormInput.f) }
                 @helper.form(action = postUrl) {
                 @CSRF.formField
-                @helper.inputText(connexionForm("host"), 'class -> "input", 'placeholder -> "127.0.0.1")
-                @helper.inputText(connexionForm("port"), 'class -> "input", 'placeholder -> "3000")
-                <div class="field is-horizontal">
-                    <div class="field-label">
-                    </div>
-                    <div class="field-body">
-                        <div class="field">
-                            <p class="control is-pulled-right connect">
-                                <button class="button is-info is-outlined">
-                                    Connect
-                                </button>
-                            </p>
-                        </div>
+                @helper.inputText(connexionForm("Host"), Symbol("class") -> "input", Symbol("placeholder") -> "127.0.0.1")
+                @helper.inputText(connexionForm("Port"), Symbol("class") -> "input", Symbol("placeholder") -> "3000")
+                <div class="field is-pulled-right">
+                    <div class="control">
+                        <button class="button is-link is-outlined">Connect</button>
                     </div>
                 </div>
                 }
@@ -48,6 +50,19 @@
 </section>
 
 <script async type="text/javascript" src="../js/bulma.js"></script>
+
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', () => {
+  (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+    $notification = $delete.parentNode;
+
+    $delete.addEventListener('click', () => {
+      $notification.parentNode.removeChild($notification);
+    });
+  });
+});
+</script>
+
 
 </body>
 

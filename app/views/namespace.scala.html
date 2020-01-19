@@ -1,4 +1,4 @@
-@(host: String, port: Int, namespaces: List[NamespaceInfo], selectedNamespace: NamespaceInfo)
+@(host: String, port: Int, namespaces: List[NamespaceInfo], sets: List[SetInfo], selectedNamespaceName: String)
 @main("namespace",host, port, namespaces) {
 <section class="hero welcome is-small">
     <div class="columns">
@@ -6,7 +6,7 @@
 
             <div class="container">
                 <h1 class="is-info is-size-5 is-4">
-                    NAMESPACE: @selectedNamespace.name
+                    NAMESPACE: @selectedNamespaceName
                 </h1>
             </div>
 
@@ -32,12 +32,12 @@
                                 <th>Replication factor</th>
                             </tr>
                             <tbody>
-                            @for((namespace, index) <- namespaces.zipWithIndex) {
+                            @for((set, index) <- namespaces.zipWithIndex) {
                             <tr>
-                                <td>@namespace.name</td>
-                                <td>@namespace.getStorageEngine</td>
-                                <td>@namespace.getObjects</td>
-                                <td>@namespace.getReplicationFactor</td>
+                                <td>@set.name</td>
+                                <td>@set.getStorageEngine</td>
+                                <td>@set.getObjects</td>
+                                <td>@set.getReplicationFactor</td>
                                 <td class="level-right"><a class="show-config button is-small" href="#">Open</a></td>
                             </tr>
                             }

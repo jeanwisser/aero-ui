@@ -22,9 +22,20 @@
 <nav class="navbar is-white">
     <div class="container">
         <div class="navbar-brand">
-            <a class="navbar-item brand-text" href="@routes.HomeController.index">
+            <a class="navbar-item" href="@routes.HomeController.cluster(host, port)">
                 AeroUI
             </a>
+        </div>
+        <div class="navbar-menu">
+            <div class="navbar-start">
+                <div class="navbar-item">
+            <a class="button is-light is-small" href="@routes.HomeController.index">
+                <span class="icon">
+                  <i class="fas fa-sign-out-alt"></i>
+                </span>
+            </a>
+                </div>
+            </div>
         </div>
     </div>
 </nav>
@@ -44,7 +55,7 @@
     </div>
 </div>
 <script async type="text/javascript" src="../js/bulma.js"></script>
-
+<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </body>
 
 </html>
