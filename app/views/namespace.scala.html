@@ -1,9 +1,11 @@
-@(host: String, port: Int, namespaces: List[NamespaceInfo], sets: List[SetInfo], selectedNamespaceName: String)
+@(host: String, port: Int, namespaces: List[NamespaceInfo], sets: List[SetInfo], selectedNamespaceName: String, selectedSet: SetInfo, queryForm: Form[QueryForm.Data], res: Option[String])(implicit request: MessagesRequestHeader)
+@import helper._
+@implicitField = @{ helper.FieldConstructor(customSmallFormInput.f) }
+
 @main("namespace",host, port, namespaces) {
 <section class="hero welcome is-small">
     <div class="columns">
-        <div class="column is-12">
-
+        <div class="column auto">
             <div class="container">
                 <h1 class="is-info is-size-5 is-4">
                     NAMESPACE: @selectedNamespaceName
@@ -15,39 +17,54 @@
 </section>
 <section class="cluster-info">
     <div class="columns">
-        <div class="column is-12">
+        <div class="column is-10">
             <div class="card events-card">
                 <header class="card-header">
                     <p class="card-header-title">
                         Sets
                     </p>
                 </header>
-                <div class="card-table">
+                <div id="sets-info" class="card-table">
                     <div class="content">
-                        <table class="table is-fullwidth is-striped">
+                        <table class="sets-table table is-narrow is-striped is-hoverable">
+                            <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Storage engine</th>
-                                <th>Records</th>
-                                <th>Replication factor</th>
+                                <th>Set name</th>
+                                <th>Objects</th>
+                                <th>Memory bytes</th>
                             </tr>
+                            </thead>
                             <tbody>
-                            @for((set, index) <- namespaces.zipWithIndex) {
-                            <tr>
-                                <td>@set.name</td>
-                                <td>@set.getStorageEngine</td>
-                                <td>@set.getObjects</td>
-                                <td>@set.getReplicationFactor</td>
-                                <td class="level-right"><a class="show-config button is-small" href="#">Open</a></td>
-                            </tr>
+                            @for((set, index) <- sets.zipWithIndex) {
+                            <tr class="@if(selectedSet.name == set.name) {is-selected}" onclick="location.href='@routes.HomeController.namespace(host, port, selectedNamespaceName, Some(set.name), None)'">
+                                <td style="white-space: nowrap; text-overflow:ellipsis; overflow: hidden; max-width:1px;">@set.name</td>
+                                <td>@set.objectsCount</td>
+                                <td>@set.memoryUsedBytes</td>
+                               </tr>
                             }
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <footer class="card-footer">
-                    <a href="#" class="card-footer-item">View All</a>
-                </footer>
+            </div>
+            <div class="card events-card">
+                <header class="card-header">
+                    <div class="card-header-title">
+                        @helper.form(action = routes.HomeController.handleQueryForm(host, port, selectedNamespaceName, selectedSet.name)) {
+                        @CSRF.formField
+                        @helper.inputText(queryForm("Key"), Symbol("class") -> "input is-small", Symbol("placeholder") -> "Lookup by ID")
+                        }
+                    </div>
+                </header>
+                <div class="card-table">
+                    <div class="content">
+                        <div>
+                            @if(res.isDefined){
+                                <p>@res</p>
+                            }
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -2,29 +2,47 @@ package models
 
 import core.{Logger, MapHelper}
 
-final case class NamespaceInfo(name: String, properties: Map[String, String]) {
-  def getObjects: Option[Long] = getValue("objects", _.toLongOption)
-  def getStorageEngine: Option[String] = getValue("storage-engine", x => Option(x.toString))
-  def getReplicationFactor: Option[Int] = getValue("replication-factor", _.toIntOption)
-  def getMemoryUsedBytes: Option[Long] = getValue("memory_used_bytes", _.toLongOption)
-  def getDiskUsedBytes: Option[Long] = getValue("disk_used_bytes", _.toLongOption)
-  def getMemoryTotalSize: Option[Long] = getValue("memory-size", _.toLongOption)
-  def getDiskTotalSize: Option[Long] = getValue("device_total_bytes", _.toLongOption)
-  def getMemoryFreePercent: Option[Int] = getValue("memory_free_pct", _.toIntOption)
-  def getDiskFreePercent: Option[Int] = getValue("device_available_pct", _.toIntOption)
-
-  private def getValue[T](key: String, f: String => Option[T]): Option[T] = {
-    properties.get(key).flatMap(v => f(v)) match {
-      case Some(value) => Some(value)
-      case None =>
-        Logger.warn("InfoProperties.getValue", s"could not get $key from properties for namespace: $name")
-        None
-    }
-  }
-}
+final case class NamespaceInfo(name: String,
+                               objectsCount: Long,
+                               storageEngine: String,
+                               replicationFactor: Int,
+                               memoryUsedBytes: Long,
+                               diskUsedBytes: Long,
+                               MemoryTotalSize: Long,
+                               DiskTotalSize: Long,
+                               memoryFreePercent: Int,
+                               diskFreePercent: Int)
 
 object NamespaceInfo {
   def apply(name: String, properties: String): NamespaceInfo = {
-    NamespaceInfo(name, MapHelper.toMap(properties))
+    val propertiesMap = MapHelper.toMap(properties, ';')
+
+    def getObjects: Long = getValue(propertiesMap, "objects", _.toLong)
+    def getStorageEngine: String = getValue(propertiesMap, "storage-engine", _.toString)
+    def getReplicationFactor: Int = getValue(propertiesMap, "replication-factor", _.toInt)
+    def getMemoryUsedBytes: Long = getValue(propertiesMap, "memory_used_bytes", _.toLong)
+    def getDiskUsedBytes: Long = getValue(propertiesMap, "device_used_bytes", _.toLong)
+    def getMemoryTotalSize: Long = getValue(propertiesMap, "memory-size", _.toLong)
+    def getDiskTotalSize: Long = getValue(propertiesMap, "device_total_bytes", _.toLong)
+    def getMemoryFreePercent: Int = getValue(propertiesMap, "memory_free_pct", _.toInt)
+    def getDiskFreePercent: Int = getValue(propertiesMap, "device_available_pct", _.toInt)
+
+    NamespaceInfo(name,
+                   getObjects,
+                   getStorageEngine,
+                   getReplicationFactor,
+                   getMemoryUsedBytes,
+                   getDiskUsedBytes,
+                   getMemoryTotalSize,
+                   getDiskTotalSize,
+                   getMemoryFreePercent,
+                   getDiskFreePercent)
+  }
+
+  private def getValue[T](properties: Map[String, String], key: String, f: String => T): T = {
+    properties.get(key) match {
+      case Some(value) => f(value)
+      case None => throw new Exception(s"could not get $key from properties : $properties")
+    }
   }
 }

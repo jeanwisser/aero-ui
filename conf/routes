@@ -4,10 +4,11 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                                   controllers.HomeController.index(exception: Option[String] = None)
-POST    /                                   controllers.HomeController.createForm
-GET     /cluster/:host/:port                controllers.HomeController.cluster(host: String, port: Int)
-GET     /namespace/:host/:port/:name        controllers.HomeController.namespace(host: String, port: Int, name: String)
+GET     /                                   controllers.HomeController.index
+POST    /                                   controllers.HomeController.handleConnexionForm
+GET     /cluster/:host/:port                controllers.HomeController.cluster(host: String, port: Int, exception: Option[String] = None)
+GET     /namespace/:host/:port/:name        controllers.HomeController.namespace(host: String, port: Int, name: String, set: Option[String], res: Option[String])
+POST    /namespace/host/port/name           controllers.HomeController.handleQueryForm(host: String, port: Int, name: String, set: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

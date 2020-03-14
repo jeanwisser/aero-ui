@@ -3,7 +3,7 @@
 <h3 class="menu-label">Namespaces</h3>
 <ul class="menu-list">
   @for(namespace <- namespaces) {
-  <li><a href="@routes.HomeController.namespace(host, port, namespace.name)">@namespace.name</a>
+  <li><a href="@routes.HomeController.namespace(host, port, namespace.name, None, None)">@namespace.name</a>
   }
 </ul>
 }

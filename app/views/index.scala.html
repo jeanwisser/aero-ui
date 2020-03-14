@@ -1,4 +1,4 @@
-@(connexionForm: Form[ConnexionForm.Data], postUrl: Call, exception: Option[String])(implicit request: MessagesRequestHeader)
+@(connexionForm: Form[ConnexionForm.Data])(implicit request: MessagesRequestHeader)
 <!DOCTYPE html>
 <html lang="en">
 
@@ -22,10 +22,10 @@
         </div>
         <div class="columns is-centered">
             <div class="column is-4">
-                @if(exception.isDefined){
+                @request.flash.data.map{ case (name, value) =>
                 <div class="notification is-danger is-size-7">
                     <button class="delete"></button>
-                    @exception
+                    @value
                 </div>
                 }
             </div>
@@ -34,13 +34,13 @@
             <div class="column is-3">
                 @import helper._
                 @implicitField = @{ helper.FieldConstructor(customFormInput.f) }
-                @helper.form(action = postUrl) {
+                @helper.form(action = routes.HomeController.handleConnexionForm()) {
                 @CSRF.formField
                 @helper.inputText(connexionForm("Host"), Symbol("class") -> "input", Symbol("placeholder") -> "127.0.0.1")
                 @helper.inputText(connexionForm("Port"), Symbol("class") -> "input", Symbol("placeholder") -> "3000")
                 <div class="field is-pulled-right">
                     <div class="control">
-                        <button class="button is-link is-outlined">Connect</button>
+                        <button class="button is-small">Connect</button>
                     </div>
                 </div>
                 }

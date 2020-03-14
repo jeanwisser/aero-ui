@@ -1,0 +1,21 @@
+@(elements: helper.FieldElements)
+
+<div class="field is-horizontal">
+    <div class="field-label is-small">
+        <label class="label">@elements.label</label>
+    </div>
+
+    <div class="field-body">
+        <div class="field has-addons">
+        <p class="control @if(elements.hasErrors) {is-danger}">
+            @elements.input
+        </p>
+        <div class="control">
+            <button class="button is-small">
+                Search
+            </button>
+        </div>
+        </div>
+        <p class="errors">@elements.errors.mkString(", ")</p>
+    </div>
+</div>

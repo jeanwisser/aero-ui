@@ -1,6 +1,16 @@
-@(host: String, port: Int, nodes: Set[NodeInfo], namespaces: List[NamespaceInfo])
+@(host: String, port: Int, nodes: Set[NodeInfo], namespaces: List[NamespaceInfo], exception: Option[String])
 @main("cluster", host, port, namespaces) {
 <section class="hero welcome is-small">
+    @if(exception.isDefined){
+    <div class="columns">
+        <div class="column is-10">
+            <div class="notification is-danger is-size-7">
+                <button class="delete"></button>
+                @exception
+            </div>
+        </div>
+    </div>
+    }
 <div class="columns">
 <div class="column is-12">
 
@@ -14,7 +24,7 @@
 </section>
 <section class="cluster-info">
     <div class="columns">
-        <div class="column is-12">
+        <div class="column is-10">
             <div class="card events-card">
                 <header class="card-header">
                     <p class="card-header-title">
@@ -41,7 +51,7 @@
                                 <td>@node.host.port</td>
                                 <td>@node.version</td>
                                <td> <span class="tag is-success">@node.isActive</span></td>
-                                <td class="level-right"><a class="show-config button is-small" href="#">Show config</a></td>
+                                <td class="level-right"><a class="button is-small" href="#">Show config</a></td>
                             </tr>
                             }
                             </tbody>
@@ -68,19 +78,16 @@
                             @for((namespace, index) <- namespaces.zipWithIndex) {
                             <tr>
                                 <td>@namespace.name</td>
-                                <td>@namespace.getStorageEngine</td>
-                                <td>@namespace.getObjects</td>
-                                <td>@namespace.getReplicationFactor</td>
-                                <td class="level-right"><a class="show-config button is-small" href="#">Open</a></td>
+                                <td>@namespace.storageEngine</td>
+                                <td>@namespace.objectsCount</td>
+                                <td>@namespace.replicationFactor</td>
+                                <td class="level-right"><a class="button is-small" href="@routes.HomeController.namespace(host, port, namespace.name, None, None)">Open</a></td>
                             </tr>
                             }
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <footer class="card-footer">
-                    <a href="#" class="card-footer-item">View All</a>
-                </footer>
             </div>
         </div>
     </div>

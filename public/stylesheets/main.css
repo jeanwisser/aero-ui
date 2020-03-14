@@ -66,10 +66,21 @@ padding-right: 3.5em;
   margin: 1rem 0;
 }
 
-.show-config{
-    background-color: #cc3300;
-    border-color: transparent;
-    color: #fff;
+.button{
+    background-color: transparent;
+    border-color: #cc3300;
+    color: #cc3300;
+}
+
+.button:hover{
+     background: #cc3300;
+     color: white;
+}
+
+.button:focus{
+     background: #cc3300;
+     border-color: #cc3300;
+     color: white;
 }
 
 .info-tiles .subtitle {
@@ -109,4 +120,27 @@ padding-right: 3.5em;
 .errors {
 font-size: 12px;
 color: #f14668;
+}
+
+.sets-table{
+cursor: pointer;
+}
+
+.sets-table tr.is-selected{
+background-color:  hsla(15,100%,40%, 0.7);
+}
+
+.query-input{
+font-weight: 700;
+}
+
+#sets-info{
+max-height: 200px;
+overflow-y: scroll;
+display: block;
+width:100%;
+}
+
+::placeholder {
+  opacity: 1;
 }

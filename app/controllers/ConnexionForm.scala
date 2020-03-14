@@ -6,7 +6,7 @@ object ConnexionForm {
 
   case class Data(host: String, port: Int)
 
-  val form = Form(
+  val connexionForm = Form(
     mapping(
       "Host" -> nonEmptyText,
       "Port" -> number(min = 0, max = 65535)
