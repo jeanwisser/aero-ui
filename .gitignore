@@ -35,5 +35,6 @@ src_managed/
 project/boot/
 project/plugins/project/
 SBT__*
+.sbt
 
 /logs
