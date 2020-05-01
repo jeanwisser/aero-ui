@@ -2,8 +2,9 @@ package models
 
 import core.{Logger, MapHelper}
 
-final case class SetInfo(name: String, objectsCount: Long, memoryUsedBytes: Long){
-}
+import scala.util.Try
+
+final case class SetInfo(name: String, objectsCount: Long, memoryUsedBytes: Long, diskUsedBytes: Option[Long])
 
 object SetInfo {
   def apply(properties: String): SetInfo = {
@@ -11,7 +12,8 @@ object SetInfo {
     def getName: String = getValue(propertiesMap, "set", _.toString)
     def getObjects: Long = getValue(propertiesMap, "objects", _.toLong)
     def getMemoryUsedBytes: Long = getValue(propertiesMap, "memory_data_bytes", _.toLong)
-    SetInfo(getName, getObjects, getMemoryUsedBytes)
+    def getDiskUsedBytes: Option[Long] = Try(getValue(propertiesMap, "disk_data_bytes", _.toLong)).toOption
+    SetInfo(getName, getObjects, getMemoryUsedBytes, getDiskUsedBytes)
   }
 
   private def getValue[T](properties: Map[String, String], key: String, f: String => T): T = {

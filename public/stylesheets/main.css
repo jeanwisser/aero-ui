@@ -127,18 +127,11 @@ cursor: pointer;
 }
 
 .sets-table tr.is-selected{
-background-color:  hsla(15,100%,40%, 0.7);
+background-color:  #cc3300;
 }
 
 .query-input{
 font-weight: 700;
-}
-
-#sets-info{
-max-height: 200px;
-overflow-y: scroll;
-display: block;
-width:100%;
 }
 
 ::placeholder {

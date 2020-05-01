@@ -1,9 +1,16 @@
 @(host: String, port: Int, namespaces: List[NamespaceInfo])
 @defining(play.core.PlayVersion.current) { version =>
-<h3 class="menu-label">Namespaces</h3>
+<p class="menu-label">
+  General
+</p>
 <ul class="menu-list">
+<li><a href="@routes.HomeController.cluster(host, port)">Cluster overview</a></li>
+</ul>
+<ul class="menu-list">
+  <li><a href="@routes.HomeController.cluster(host, port)">Namespaces</a>
   @for(namespace <- namespaces) {
-  <li><a href="@routes.HomeController.namespace(host, port, namespace.name, None, None)">@namespace.name</a>
+    <ul><a href="@routes.HomeController.namespace(host, port, namespace.name, None)">@namespace.name</a></ul>
   }
+  </li>
 </ul>
 }
