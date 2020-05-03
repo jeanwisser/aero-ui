@@ -137,3 +137,19 @@ font-weight: 700;
 ::placeholder {
   opacity: 1;
 }
+
+.select{
+width: 100%;
+}
+
+select{
+width:100%
+}
+
+.select option{
+width: 100%;
+}
+
+.namespace-form{
+margin: 1% 0 2% 0;
+}

@@ -36,8 +36,8 @@
                 @implicitField = @{ helper.FieldConstructor(customFormInput.f) }
                 @helper.form(action = routes.HomeController.handleConnexionForm()) {
                 @CSRF.formField
-                @helper.inputText(connexionForm("Host"), Symbol("class") -> "input", Symbol("placeholder") -> "127.0.0.1")
-                @helper.inputText(connexionForm("Port"), Symbol("class") -> "input", Symbol("placeholder") -> "3000")
+                @helper.inputText(connexionForm("Host"), Symbol("class") -> "input")
+                @helper.inputText(connexionForm("Port"), Symbol("class") -> "input")
                 <div class="field is-pulled-right">
                     <div class="control">
                         <button class="button is-small">Connect</button>

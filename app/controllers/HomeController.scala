@@ -4,8 +4,8 @@ import client.Aerospike
 import core.ClusterService
 import javax.inject._
 import play.api.mvc._
-import ConnexionForm._
-import models.{AerospikeRecord, NamespaceInfo, SeedNode, SetInfo}
+import ConnexionForm.{Data, _}
+import models.{AerospikeRecord, NamespaceInfo, NodeInfo, SeedNode, SetInfo}
 import QueryForm._
 import com.aerospike.client.Record
 
@@ -31,7 +31,7 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
    * a path of `/`.
    */
   def index(): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
-    Ok(views.html.index(connexionForm))
+    Ok(views.html.index(connexionForm.fill(Data("127.0.0.1", 3000))))
   }
 
   def handleConnexionForm(): Action[AnyContent] = messagesAction.async { implicit request: MessagesRequest[AnyContent] =>
@@ -47,42 +47,52 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
     )
   }
 
-  def cluster(host: String, port: Int): Action[AnyContent] = messagesAction.async { implicit request: MessagesRequest[AnyContent] =>
+  def cluster(host: String, port: Int): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
     redirectIfError(Aerospike(SeedNode(host, port)).map { client =>
-      ClusterService.getNodes(client).map { nodes =>
-        val nodesInfo = nodes.map(node => ClusterService.getNodeInformation(node)).toSet
-        val namespacesInfo = ClusterService.getNamespacesInformation(nodes.head).values.toList
-        Ok(views.html.cluster(host, port, nodesInfo, namespacesInfo))
-      }
+    client.put("test", "sdq","key2", "blabla")
+      val nodes = ClusterService.getNodes(client)
+      val nodesInfo = nodes.map(n => ClusterService.getNodeInformation(n))
+      val namespacesInfo = ClusterService.getNamespacesInformation(nodes.head).values.toList
+      Ok(views.html.cluster(host, port, nodesInfo.toSet, namespacesInfo))
     })
   }
 
   def namespace(host: String, port: Int, namespaceName: String, setName: Option[String]): Action[AnyContent] =
+    namespaceWithKeyToQuery(host, port, namespaceName, setName, None)
+
+  def namespaceWithKeyToQuery(host: String, port: Int, namespaceName: String, setName: Option[String], keyToQuery: Option[String]): Action[AnyContent] =
     messagesAction.async { implicit request: MessagesRequest[AnyContent] =>
       redirectIfError(Aerospike(SeedNode(host, port)).map { client =>
-        ClusterService.getNodes(client).map {
-          nodes =>
-            val namespacesInfo = ClusterService.getNamespacesInformation(nodes.head)
-            if (namespacesInfo.contains(namespaceName)) {
-              ClusterService.getSetsInformation(nodes.head, namespaceName) match {
-                case Success(sets) =>
-                  if (setName.forall(s => sets.contains(s))) {
-                    val selectedSet = setName.map(sets(_)).getOrElse(sets.values.head)
-                    Ok(
+        val node = ClusterService.getNodes(client).head
+        val namespacesInfo = ClusterService.getNamespacesInformation(node)
+        if (namespacesInfo.contains(namespaceName)) {
+         val setsContext = for {
+          sets <- ClusterService.getSetsInformation(node, namespaceName)
+          set <- ClusterService.getSetInformation(sets, setName.getOrElse(sets.keys.head))
+          } yield (set, sets)
+          setsContext match {
+            case Left(failureMsg) =>
+              Future(Redirect(routes.HomeController.namespace(host, port, namespaceName, setName)).flashing("exception" -> failureMsg))
+            case Right((selectedSet, sets)) =>
+              keyToQuery match {
+                case Some(key) =>
+                  val record = ClusterService.getRecord(client, namespaceName, selectedSet.name, key)
+                  record.map {
+                    case Left(failureMsg) => Redirect(routes.HomeController.namespace(host, port, namespaceName, setName))
+                      .flashing("exception" -> failureMsg)
+                    case Right(record) => Ok(
                       views.html
-                        .namespace(host, port, namespacesInfo.values.toList, sets.values.toList, namespaceName, selectedSet, queryForm, None)
+                        .namespace(host, port, namespacesInfo.values.toList, sets.values.toList, namespaceName, selectedSet, queryForm, Some(record))
                     )
-                  } else {
-                    Redirect(routes.HomeController.cluster(host, port))
-                      .flashing("exception" -> s"Namespace $namespaceName does contains a set named $setName")
                   }
-                case Failure(e) =>
-                  Redirect(routes.HomeController.cluster(host, port))
-                    .flashing("exception" -> s"Namespace $namespaceName does contains any data: $e")
+                case None =>
+                  Future(Ok(
+                    views.html
+                      .namespace(host, port, namespacesInfo.values.toList, sets.values.toList, namespaceName, selectedSet, queryForm, None)))
               }
-            } else {
-              Redirect(routes.HomeController.cluster(host, port)).flashing("exception" -> s"Namespace $namespaceName does not exist")
-            }
+          }
+        } else {
+          Future(Redirect(routes.HomeController.cluster(host, port)).flashing("exception" -> s"Namespace $namespaceName does not exist"))
         }
       })
     }
@@ -91,20 +101,11 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
     implicit request: MessagesRequest[AnyContent] =>
       queryForm.bindFromRequest.fold(
         _ => {
+          println("bad")
           Future(Redirect(routes.HomeController.namespace(host, port, namespaceName, Some(setName))))
         },
         data => {
-          redirectIfError(Aerospike(SeedNode(host, port)).map { client =>
-            client.get(namespaceName, setName, data.key).map {
-              case Success(optRecord) =>
-                optRecord match {
-                  case Some(record) =>
-                    Redirect(routes.HomeController.namespace(host, port, namespaceName, Some(setName)))
-                  case None => Redirect(routes.HomeController.namespace(host, port, namespaceName, Some(setName)))
-                }
-              case Failure(_) => Redirect(routes.HomeController.namespace(host, port, namespaceName, Some(setName)))
-            }
-          })
+          namespaceWithKeyToQuery(host, port, namespaceName, Some(setName), Some(data.key))(request)
         }
       )
   }
@@ -112,6 +113,13 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
   def redirectIfError(result: Try[Future[Result]])(implicit messagesRequestHeader: MessagesRequestHeader): Future[Result] = {
     result match {
       case Failure(exception) => Future(Redirect(routes.HomeController.index()).flashing("exception" -> exception.getMessage))
+      case Success(success) => success
+    }
+  }
+
+  def redirectIfError(result: Try[Result])(implicit messagesRequestHeader: MessagesRequestHeader): Result = {
+    result match {
+      case Failure(exception) => Redirect(routes.HomeController.index()).flashing("exception" -> exception.getMessage)
       case Success(success) => success
     }
   }

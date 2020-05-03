@@ -1,0 +1,17 @@
+@(elements: helper.FieldElements)
+
+<div class="field">
+    <label class="label">@elements.label</label>
+
+    <div class="field is-grouped">
+        <p class="control @if(elements.hasErrors) {is-danger}">
+            @elements.input
+        </p>
+        <div class="control">
+            <button class="button is-normal">
+                Query
+            </button>
+        </div>
+    </div>
+    <p class="errors">@elements.errors.mkString(", ")</p>
+</div>
