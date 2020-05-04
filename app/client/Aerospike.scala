@@ -13,12 +13,6 @@ import scala.concurrent.Future
 class Aerospike(connexion: AerospikeClient) {
   val client: AerospikeClient = connexion
 
-  def put(ns: String, set: String, key: String, value: String): Future[Try[Unit]] = Future {
-    val wPolicy = new WritePolicy()
-    val bin = new Bin("", value)
-    Try(client.put(wPolicy, new Key(ns, set, key), bin))
-  }
-
   def get(ns: String, set: String, key: String): Future[Try[Option[Record]]] = Future {
     val qPolicy = new QueryPolicy()
     Try(client.get(qPolicy, new Key(ns, set, key))).map(Option(_))
