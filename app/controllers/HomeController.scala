@@ -49,7 +49,6 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
 
   def cluster(host: String, port: Int): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
     redirectIfError(Aerospike(SeedNode(host, port)).map { client =>
-    client.put("test", "sdq","key2", "blabla")
       val nodes = ClusterService.getNodes(client)
       val nodesInfo = nodes.map(n => ClusterService.getNodeInformation(n))
       val namespacesInfo = ClusterService.getNamespacesInformation(nodes.head).values.toList
@@ -103,7 +102,6 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
     implicit request: MessagesRequest[AnyContent] =>
       queryForm.bindFromRequest.fold(
         _ => {
-          println("bad")
           Future(Redirect(routes.HomeController.namespace(host, port, namespaceName, Some(setName))))
         },
         data => {
