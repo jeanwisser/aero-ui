@@ -3,7 +3,7 @@
 <section class="hero welcome is-small">
     @request.flash.data.map{ case (name, value) =>
     <div class="columns">
-        <div class="column is-auto">
+        <div class="column is-12">
             <div class="notification is-danger is-size-7">
                 <button class="delete"></button>
                 @value
@@ -24,7 +24,7 @@
 </section>
 <section class="cluster-info">
     <div class="columns">
-        <div class="column is-auto">
+        <div class="column is-12">
             <div class="card events-card">
                 <header class="card-header">
                     <p class="card-header-title">

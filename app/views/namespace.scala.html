@@ -6,7 +6,7 @@
 <section class="hero welcome is-small">
     @request.flash.data.map{ case (name, value) =>
     <div class="columns">
-        <div class="column is-auto">
+        <div class="column is-12">
             <div class="notification is-danger is-size-7">
                 <button class="delete"></button>
                 @value
@@ -15,7 +15,7 @@
     </div>
     }
     <div class="columns">
-        <div class="column auto">
+        <div class="column is-12">
             <div class="container">
                 <h1 class="is-info is-size-5 is-4">
                     NAMESPACE @selectedNamespaceName
@@ -27,7 +27,7 @@
 </section>
 <section class="cluster-info">
     <div class="columns">
-        <div class="column is-auto">
+        <div class="column is-12">
             <section class="namespace-form">
                 <div class="columns">
                     <div class="column is-4">

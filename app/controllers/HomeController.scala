@@ -24,13 +24,6 @@ import scala.util.Try
 class HomeController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)(implicit ec: ExecutionContext)
   extends AbstractController(components) {
 
-  /**
-   * Create an Action to render an HTML page.
-   *
-   * The configuration in the `routes` file means that this method
-   * will be called when the application receives a `GET` request with
-   * a path of `/`.
-   */
   def index(): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
     Ok(views.html.index(connexionForm.fill(Data("127.0.0.1", 3000))))
   }

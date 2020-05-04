@@ -114,7 +114,6 @@ padding-right: 3.5em;
 }
 
 .events-card .card-table {
-  max-height: 58vh;
   overflow-x: scroll;
 }
 
