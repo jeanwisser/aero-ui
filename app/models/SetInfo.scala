@@ -4,6 +4,7 @@ import core.Logger
 import core.MapHelper
 
 import scala.util.Try
+import core.Extensions._
 
 final case class SetInfo(
     name: String,
@@ -15,7 +16,10 @@ final case class SetInfo(
     stopWritesCount: Long,
     truncateLut: Long,
     tombstones: Long
-)
+){
+  def getMemoryUsedBytesH = memoryUsedBytes.toHumanReadableBytes
+  def getDiskUsedBytesH = diskUsedBytes.map(d => d.toHumanReadableBytes)
+}
 
 object SetInfo {
   def apply(properties: String): SetInfo = {

@@ -65,15 +65,17 @@ class HomeController @Inject()(messagesAction: MessagesActionBuilder, components
       redirectIfError(Aerospike(SeedNode(host, port)).map { client =>
         val node = ClusterService.getNodes(client).head
         val namespacesInfo = ClusterService.getNamespacesInformation(node)
+
         if (namespacesInfo.contains(namespaceName)) {
          val setsContext = for {
           sets <- ClusterService.getSetsInformation(node, namespaceName)
           set <- ClusterService.getSetInformation(sets, setName.getOrElse(sets.keys.head))
-          } yield (set, sets)
+          } yield (sets, set)
+
           setsContext match {
             case Left(failureMsg) =>
-              Future(Redirect(routes.HomeController.namespace(host, port, namespaceName, setName)).flashing("exception" -> failureMsg))
-            case Right((selectedSet, sets)) =>
+              Future(Redirect(routes.HomeController.cluster(host, port)).flashing("exception" -> failureMsg))
+            case Right((sets, selectedSet)) =>
               keyToQuery match {
                 case Some(key) =>
                   val record = ClusterService.getRecord(client, namespaceName, selectedSet.name, key)

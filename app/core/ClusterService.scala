@@ -24,8 +24,9 @@ object ClusterService {
 
   def getSetsInformation(node: Node, namespace: String): Either[String, Map[String, SetInfo]] = {
     Try(Info.request(null, node, s"sets/$namespace").split(';')) match {
-      case Success(sets) => Right(sets.map(SetInfo(_)).map(s => s.name -> s).toMap)
-      case Failure(e) => Left(s"Namespace $namespace does contains any data: $e")
+      case Success(sets) if sets.count(e => e.contains(namespace)) > 1 => Right(sets.map(a => SetInfo(a)).map(s => s.name -> s).toMap)
+      case Failure(e) => Left(s"Error retrieving namespace $namespace data: $e")
+      case _ => Left(s"Namespace $namespace does contains any data")
     }
   }
 

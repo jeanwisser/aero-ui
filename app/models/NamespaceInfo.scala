@@ -2,6 +2,7 @@ package models
 
 import core.MapHelper
 import scala.util.Try
+import core.Extensions._
 
 final case class NamespaceInfo(
     name: String,
@@ -16,24 +17,12 @@ final case class NamespaceInfo(
     diskFreePercent: Option[Int]
 ){
 
-  def humanReadableByteCountSI(bytes: Long): String = {
-    if (-1000 < bytes && bytes < 1000) return bytes + " B"
-    val ci = Array("k", "M", "G", "T", "P")
-    @scala.annotation.tailrec
-    def loop(i: Int, b:  Double): (Int, Double) = {
-      if(b <= -999_950 || b >= 999_950) loop(i + 1, b / 1000)
-      else (i, b)
-    }
-    val (index, result) = loop(0, bytes)
-    f"${result / 1000}%1.2f ${ci(index)}B"
-  }
-
-  def getMemoryUsedBytesH = humanReadableByteCountSI(memoryUsedBytes)
-  def getMemoryTotalSizeH = humanReadableByteCountSI(memoryTotalSize)
-  def getDiskUsedBytesH = diskUsedBytes.map(d => humanReadableByteCountSI(d))
-  def getDiskTotalSizeH = diskTotalSize.map(d => humanReadableByteCountSI(d))
+  def getMemoryUsedBytesH = memoryUsedBytes.toHumanReadableBytes
+  def getMemoryTotalSizeH = memoryTotalSize.toHumanReadableBytes
+  def getDiskUsedBytesH = diskUsedBytes.map(d => d.toHumanReadableBytes)
+  def getDiskTotalSizeH = diskTotalSize.map(d => d.toHumanReadableBytes)
   def getMemoryUsagePercentage = 100 - memoryFreePercent
-  def getDiskUsagePercentage = 100 - memoryFreePercent
+  def getDiskUsagePercentage = diskFreePercent.map(d => 100 - d)
   def isUsingDisk = diskUsedBytes.isDefined && diskTotalSize.isDefined && diskFreePercent.isDefined
 }
 

@@ -1,4 +1,4 @@
-@(host: String, port: Int, namespaces: List[NamespaceInfo], sets: List[SetInfo], selectedNamespaceName: String, selectedSet: SetInfo, queryForm: Form[QueryForm.Data], result: Option[AerospikeRecord])(implicit request: MessagesRequestHeader)
+@(host: String, port: Int, namespaces: List[NamespaceInfo], sets: List[SetInfo], selectedNamespaceName: String, selectedSet: SetInfo, queryForm: Form[QueryForm.Data], record: Option[AerospikeRecord])(implicit request: MessagesRequestHeader)
 @import helper._
 @implicitField = @{ helper.FieldConstructor(customFormNamespace.f) }
 
@@ -70,8 +70,8 @@
                                 <table class="table is-fullwidth is-striped">
                                     <tr>
                                         <th>Objects</th>
-                                        <th>Memory data bytes</th>
-                                        <th>Disk used bytes</th>
+                                        <th>Memory used</th>
+                                        <th>Disk used</th>
                                         <th>Disable eviction</th>
                                         <th>Set enable xdr</th>
                                         <th>Stop writes count</th>
@@ -83,8 +83,8 @@
                                     @if(selectedSet.name == set.name){
                                     <tr class="">
                                         <td>@set.objectsCount</td>
-                                        <td>@set.memoryUsedBytes</td>
-                                        <td>@set.diskUsedBytes.getOrElse("-")</td>
+                                        <td>@set.getMemoryUsedBytesH</td>
+                                        <td>@set.getDiskUsedBytesH.getOrElse("-")</td>
                                         <td>@set.disableEviction</td>
                                         <td>@set.enableXdr</td>
                                         <td>@set.stopWritesCount</td>
@@ -98,7 +98,7 @@
                             </div>
                         </div>
                     </div>
-                    @if(result.isDefined) {
+                    @if(record.isDefined) {
                     <div class="container">
                         <div class="card events-card">
                             <header class="card-header">
@@ -108,7 +108,22 @@
                             </header>
                             <div class="card-table">
                                 <div class="content">
-                                    @result.get.bins
+                                    <table class="table is-fullwidth is-striped">
+                                        <tr>
+                                            <th>Primary key</th>
+                                            <th>Generation</th>
+                                            <th>Expiration</th>
+                                            <th>Bins</th>
+                                        </tr>
+                                        <tbody>
+                                        <tr class="">
+                                            <td>@record.get.key</td>
+                                            <td>@record.get.generation</td>
+                                            <td>@record.get.expiration</td>
+                                            <td>@record.get.bins</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
