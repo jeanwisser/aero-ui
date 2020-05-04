@@ -110,17 +110,21 @@
                                 <div class="content">
                                     <table class="table is-fullwidth is-striped">
                                         <tr>
-                                            <th>Primary key</th>
+                                            <th>PK</th>
                                             <th>Generation</th>
                                             <th>Expiration</th>
-                                            <th>Bins</th>
+                                            @for(binName <- record.get.bins.keys){
+                                            <th>@binName</th>
+                                            }
                                         </tr>
                                         <tbody>
-                                        <tr class="">
+                                        <tr class="" >
                                             <td>@record.get.key</td>
                                             <td>@record.get.generation</td>
                                             <td>@record.get.expiration</td>
-                                            <td>@record.get.bins</td>
+                                            @for(binValue <- record.get.bins.values){
+                                            <td>@binValue</td>
+                                            }
                                         </tr>
                                         </tbody>
                                     </table>
