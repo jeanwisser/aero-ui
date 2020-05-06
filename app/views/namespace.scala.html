@@ -37,7 +37,7 @@
                                 <select>
                                     @for((set, index) <- sets.zipWithIndex) {
                                     <option @if(selectedSet.name== set.name) {selected}
-                                            onclick="location.href='@routes.HomeController.namespace(host, port, selectedNamespaceName, Some(set.name))'">
+                                            onclick="location.href='@routes.NamespaceController.namespace(host, port, selectedNamespaceName, Some(set.name))'">
                                         @set.name
                                     </option>
                                     }
@@ -47,7 +47,7 @@
 
                     </div>
                     <div class="column is-5">
-                        @helper.form(action = routes.HomeController.handleQueryForm(host, port, selectedNamespaceName,
+                        @helper.form(action = routes.NamespaceController.handleQueryForm(host, port, selectedNamespaceName,
                         selectedSet.name)) {
                         @CSRF.formField
                         @helper.inputText(queryForm("Key"), Symbol("class") -> "input is-normal", Symbol("placeholder")
@@ -70,8 +70,7 @@
                                 <table class="table is-fullwidth is-striped">
                                     <tr>
                                         <th>Objects</th>
-                                        <th>Memory used</th>
-                                        <th>Disk used</th>
+                                        <th>Memory used by data</th>
                                         <th>Disable eviction</th>
                                         <th>Set enable xdr</th>
                                         <th>Stop writes count</th>
@@ -84,7 +83,6 @@
                                     <tr class="">
                                         <td>@set.objectsCount</td>
                                         <td>@set.getMemoryUsedBytesH</td>
-                                        <td>@set.getDiskUsedBytesH.getOrElse("-")</td>
                                         <td>@set.disableEviction</td>
                                         <td>@set.enableXdr</td>
                                         <td>@set.stopWritesCount</td>

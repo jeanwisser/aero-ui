@@ -85,7 +85,7 @@
                                 <td>@namespace.objectsCount</td>
                                 <td>@namespace.getMemoryUsedBytesH / @namespace.getMemoryTotalSizeH (@namespace.getMemoryUsagePercentage%)</td>
                                 <td>@if(namespace.isUsingDisk){@namespace.getDiskUsedBytesH / @namespace.getDiskTotalSizeH (@namespace.getDiskUsagePercentage%)} else { - }</td>
-                                <td class="level-right"><a class="button is-small" href="@routes.HomeController.namespace(host, port, namespace.name, None)">Open</a></td>
+                                <td class="level-right"><a class="button is-small" href="@routes.NamespaceController.namespace(host, port, namespace.name, None)">Open</a></td>
                             </tr>
                             }
                             </tbody>

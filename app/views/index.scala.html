@@ -34,7 +34,7 @@
             <div class="column is-3">
                 @import helper._
                 @implicitField = @{ helper.FieldConstructor(customFormInput.f) }
-                @helper.form(action = routes.HomeController.handleConnexionForm()) {
+                @helper.form(action = routes.ConnexionController.handleConnexionForm()) {
                 @CSRF.formField
                 @helper.inputText(connexionForm("Host"), Symbol("class") -> "input")
                 @helper.inputText(connexionForm("Port"), Symbol("class") -> "input")

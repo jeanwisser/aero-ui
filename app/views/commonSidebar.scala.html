@@ -4,12 +4,12 @@
   General
 </p>
 <ul class="menu-list">
-<li><a href="@routes.HomeController.cluster(host, port)">Nodes</a></li>
+<li><a href="@routes.ClusterController.cluster(host, port)">Nodes</a></li>
 </ul>
 <ul class="menu-list">
-  <li><a href="@routes.HomeController.cluster(host, port)">Namespaces</a>
+  <li><a href="@routes.ClusterController.cluster(host, port)">Namespaces</a>
   @for(namespace <- namespaces) {
-    <ul><a href="@routes.HomeController.namespace(host, port, namespace.name, None)">@namespace.name</a></ul>
+    <ul><a href="@routes.NamespaceController.namespace(host, port, namespace.name, None)">@namespace.name</a></ul>
   }
   </li>
 </ul>
