@@ -40,7 +40,10 @@
                                 <th>ID</th>
                                 <th>Host</th>
                                 <th>Port</th>
-                                <th>Version</th>
+                                <th>Build</th>
+                                <th>Cluster size</th>
+                                <th>Clients connections</th>
+                                <th>Migrate remaining</th>
                             </tr>
                             <tbody>
                             @for((node, index) <- nodes.zipWithIndex) {
@@ -50,8 +53,10 @@
                                 <td>@node.name</td>
                                 <td>@node.host.name</td>
                                 <td>@node.host.port</td>
-                                <td>@node.version</td>
-                                <td class="level-right"><a class="button is-small" href="#">Show config</a></td>
+                                <td>@node.build</td>
+                                <td>@node.clusterSize</td>
+                                <td>@node.clientConnections</td>
+                                <td>@node.migratePartitionsRemaining</td>
                             </tr>
                             }
                             </tbody>

@@ -73,7 +73,7 @@ object AerospikeContext {
 
   def getNodeInformation(node: Node): NodeInfo = {
     val details = Info.request(null, node)
-    NodeInfo(node.getName, node.getHost, node.isActive, details.get("version"), details.get("statistics"))
+    NodeInfo(node.getName, node.getHost, node.isActive, details.get("build"), details.get("statistics"))
   }
 
   def getNamespacesInformation(node: Node): Map[String, NamespaceInfo] = {

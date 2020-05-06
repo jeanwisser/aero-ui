@@ -1,22 +1,11 @@
 package controllers
 
-import client.Aerospike
 import core.AerospikeContext
 import javax.inject.Inject
-import models.SeedNode
-import play.api.mvc.AbstractController
-import play.api.mvc.Action
-import play.api.mvc.AnyContent
-import play.api.mvc.ControllerComponents
-import play.api.mvc.MessagesActionBuilder
-import play.api.mvc.MessagesRequest
-import play.api.mvc.MessagesRequestHeader
-import play.api.mvc.Result
+import play.api.mvc._
 
 import scala.concurrent.ExecutionContext
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class ClusterController @Inject() (messagesAction: MessagesActionBuilder, components: ControllerComponents)(implicit ec: ExecutionContext)
     extends AbstractController(components) {

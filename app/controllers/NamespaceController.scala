@@ -34,7 +34,7 @@ class NamespaceController @Inject()(messagesAction: MessagesActionBuilder, compo
       val setsContext = for {
         selectedNamespace <- context.getNamespaceInformation(namespaceName)
         setsInfo <- context.getNamespaceSets(selectedNamespace.name)
-        set <-  context.getSetInformation(setName.getOrElse(context.sets.keys.head))
+        set <-  context.getSetInformation(setName.getOrElse(setsInfo.keys.head))
       } yield (setsInfo, set)
 
       setsContext match {
