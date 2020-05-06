@@ -10,7 +10,7 @@ import scala.util.{Failure, Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Aerospike(connexion: AerospikeClient) {
+final case class Aerospike(connexion: AerospikeClient) {
   val client: AerospikeClient = connexion
 
   def get(ns: String, set: String, key: String): Future[Try[Option[Record]]] = Future {
