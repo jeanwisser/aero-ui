@@ -11,16 +11,16 @@
         </div>
     </div>
     }
-<div class="columns">
-<div class="column is-12">
+    <div class="columns">
+        <div class="column is-12">
 
             <div class="container">
                 <h1 class="is-info is-size-5 is-4">
                     CLUSTER OVERVIEW
                 </h1>
             </div>
-</div>
-</div>
+        </div>
+    </div>
 </section>
 <section class="cluster-info">
     <div class="columns">
@@ -49,7 +49,7 @@
                             @for((node, index) <- nodes.zipWithIndex) {
                             <tr>
                                 <td>@{index+1}</td>
-                                <td> <span class="tag is-success">@node.isActive</span></td>
+                                <td><span class="tag is-success">@node.isActive</span></td>
                                 <td>@node.name</td>
                                 <td>@node.host.name</td>
                                 <td>@node.host.port</td>
@@ -88,9 +88,28 @@
                                 <td>@namespace.storageEngine</td>
                                 <td>@namespace.replicationFactor</td>
                                 <td>@namespace.objectsCount</td>
-                                <td>@namespace.getMemoryUsedBytesH / @namespace.getMemoryTotalSizeH (@namespace.getMemoryUsagePercentage%)</td>
-                                <td>@if(namespace.isUsingDisk){@namespace.getDiskUsedBytesH / @namespace.getDiskTotalSizeH (@namespace.getDiskUsagePercentage%)} else { - }</td>
-                                <td class="level-right"><a class="button is-small" href="@routes.NamespaceController.namespace(host, port, namespace.name, None)">Open</a></td>
+                                <td>
+                                    <div class="progress-wrapper">
+                                        <progress class="progress is-medium
+                                    @if(namespace.getMemoryUsagePercentage < 80){ is-success } else {@if(namespace.getMemoryUsagePercentage < 90){ is-warning } else { is-danger }}"
+                                                  value="@namespace.getMemoryUsagePercentage" max="100"></progress>
+                                        <p class="progress-value has-text-dark-grey">@namespace.getMemoryUsedBytesH /
+                                            @namespace.getMemoryTotalSizeH (@namespace.getMemoryUsagePercentage%)</p>
+                                    </div>
+                                </td>
+                                <td>@if(namespace.isUsingDisk){
+                                    <div class="progress-wrapper">
+                                        <progress class="progress is-medium
+                                    @if(namespace.getDiskUsagePercentage.get < 80){ is-success } else {@if(namespace.getDiskUsagePercentage.get < 90){ is-warning } else { is-danger }}"
+                                                  value="@namespace.getDiskUsagePercentage" max="100"></progress>
+                                        <p class="progress-value has-text-dark-grey">@namespace.getDiskUsedBytesH /
+                                            @namespace.getDiskTotalSizeH (@namespace.getDiskUsagePercentage%)</p>
+                                    </div>
+                                    } else { - }
+                                </td>
+                                <td class="level-right"><a class="button is-small"
+                                                           href="@routes.NamespaceController.namespace(host, port, namespace.name, None)">Open</a>
+                                </td>
                             </tr>
                             }
                             </tbody>
