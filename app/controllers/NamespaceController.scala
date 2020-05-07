@@ -30,11 +30,10 @@ class NamespaceController @Inject()(messagesAction: MessagesActionBuilder, compo
 
   def getNamespacePageResult(host: String, port: Int, namespaceName: String, setName: Option[String], keyToQuery: Option[String])(implicit request: MessagesRequest[AnyContent]): Future[Result] = {
     redirectIfError(AerospikeContext(host, port).map{ context =>
-
       val setsContext = for {
         selectedNamespace <- context.getNamespaceInformation(namespaceName)
-        setsInfo <- context.getNamespaceSets(selectedNamespace.name)
-        set <-  context.getSetInformation(setName.getOrElse(setsInfo.keys.head))
+        setsInfo <- selectedNamespace.getNamespaceSets
+        set <-  selectedNamespace.getSetInformation(setName.getOrElse(setsInfo.keys.head))
       } yield (setsInfo, set)
 
       setsContext match {

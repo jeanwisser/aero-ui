@@ -18,30 +18,13 @@ import scala.util.Try
 final case class AerospikeContext(
     client: Aerospike,
     nodes: List[NodeInfo],
-    namespaces: Map[String, NamespaceInfo],
-    sets: Map[String, SetInfo]
+    namespaces: Map[String, NamespaceInfo]
 ) {
 
   def getNamespaceInformation(namespace: String): Either[String, NamespaceInfo] = {
     namespaces.get(namespace) match {
       case Some(namespaceInfo) => Right(namespaceInfo)
       case None                => Left(s"Namespace $namespace not found")
-    }
-  }
-
-  def getSetInformation(set: String): Either[String, SetInfo] = {
-    sets.get(set) match {
-      case Some(setInfo) => Right(setInfo)
-      case None          => Left(s"Set $set not found")
-    }
-  }
-
-  def getNamespaceSets(namespace: String): Either[String, Map[String, SetInfo]] = {
-    val namespaceSets = sets.filter(s => s._2.namespace == namespace)
-    if (namespaceSets.isEmpty) {
-      Left(s"Namespace $namespace does contains any data")
-    } else {
-      Right(namespaceSets)
     }
   }
 
@@ -63,7 +46,7 @@ object AerospikeContext {
       val nodes      = getNodes(client)
       val namespaces = getNamespacesInformation(nodes.head)
       val sets       = namespaces.flatMap(n => getSetsInformation(nodes.head, n._1))
-      new AerospikeContext(client, nodes.map(n => getNodeInformation(n)), namespaces, sets)
+      new AerospikeContext(client, nodes.map(n => getNodeInformation(n)), namespaces)
     }
   }
 
@@ -81,7 +64,9 @@ object AerospikeContext {
       .request(null, node, "namespaces")
       .split(';')
       .map { namespace =>
-        NamespaceInfo(namespace, Info.request(null, node, s"namespace/$namespace"))
+        val namespaceProperties = Info.request(null, node, s"namespace/$namespace")
+        val sets                = getSetsInformation(node, namespace)
+        NamespaceInfo(namespace, namespaceProperties, sets)
       }
       .map(n => (n.name, n))
       .toMap
@@ -92,8 +77,8 @@ object AerospikeContext {
       .request(null, node, s"sets/$namespace")
       .split(';')
       .filter(!_.equals(""))
-      .map { set =>
-        SetInfo(namespace, set)
+      .map { setProperties =>
+        SetInfo(setProperties)
       }
       .map(n => (n.name, n))
       .toMap

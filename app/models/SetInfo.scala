@@ -1,14 +1,10 @@
 package models
 
-import core.Logger
-import core.MapHelper
-
-import scala.util.Try
 import core.Extensions._
+import core.MapHelper
 
 final case class SetInfo(
     name: String,
-    namespace: String,
     objectsCount: Long,
     memoryUsedBytes: Long,
     disableEviction: Boolean,
@@ -21,7 +17,7 @@ final case class SetInfo(
 }
 
 object SetInfo {
-  def apply(namespace: String, properties: String): SetInfo = {
+  def apply(properties: String): SetInfo = {
     val propertiesMap                  = MapHelper.toMap(properties, ':')
     def getName: String                = MapHelper.getValue(propertiesMap, "set", _.toString)
     def getObjects: Long               = MapHelper.getValue(propertiesMap, "objects", _.toLong)
@@ -34,7 +30,6 @@ object SetInfo {
 
     SetInfo(
       getName,
-      namespace,
       getObjects,
       getMemoryUsedBytes,
       getDisableEviction,
