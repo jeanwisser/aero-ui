@@ -1,6 +1,6 @@
 package controllers
 
-import client.Aerospike
+import models.client.Aerospike
 import javax.inject._
 import play.api.mvc._
 import ConnexionForm.{Data, _}

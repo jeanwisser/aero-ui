@@ -1,4 +1,4 @@
-package client
+package models.client
 
 import com.aerospike.client._
 import com.aerospike.client.cluster.{ClusterStats, Node}

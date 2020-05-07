@@ -1,7 +1,7 @@
 package controllers
 
-import core.AerospikeContext
 import javax.inject.Inject
+import models.AerospikeContext
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext

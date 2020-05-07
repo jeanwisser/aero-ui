@@ -1,8 +1,8 @@
 package models
 
-import core.MapHelper
+import controllers.tools.{BytesHelper, MapHelper}
+
 import scala.util.Try
-import core.Extensions._
 
 final case class NamespaceInfo(
     name: String,
@@ -18,10 +18,10 @@ final case class NamespaceInfo(
     sets: Map[String, SetInfo]
 ) {
 
-  def getMemoryUsedBytesH      = memoryUsedBytes.toHumanReadableBytes
-  def getMemoryTotalSizeH      = memoryTotalSize.toHumanReadableBytes
-  def getDiskUsedBytesH        = diskUsedBytes.map(d => d.toHumanReadableBytes)
-  def getDiskTotalSizeH        = diskTotalSize.map(d => d.toHumanReadableBytes)
+  def getMemoryUsedBytesH      = BytesHelper.toHumanReadableBytes(memoryUsedBytes)
+  def getMemoryTotalSizeH      = BytesHelper.toHumanReadableBytes(memoryTotalSize)
+  def getDiskUsedBytesH        = diskUsedBytes.map(d => BytesHelper.toHumanReadableBytes(d))
+  def getDiskTotalSizeH        = diskTotalSize.map(d => BytesHelper.toHumanReadableBytes(d))
   def getMemoryUsagePercentage = 100 - memoryFreePercent
   def getDiskUsagePercentage   = diskFreePercent.map(d => 100 - d)
   def isUsingDisk              = diskUsedBytes.isDefined && diskTotalSize.isDefined && diskFreePercent.isDefined

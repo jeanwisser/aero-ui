@@ -1,4 +1,4 @@
-package core
+package controllers.tools
 
 object MapHelper {
   def toMap(properties: String, splitChar: Char): Map[String, String] = {

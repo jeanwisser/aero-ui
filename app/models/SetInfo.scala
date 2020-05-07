@@ -1,7 +1,6 @@
 package models
 
-import core.Extensions._
-import core.MapHelper
+import controllers.tools.{BytesHelper, MapHelper}
 
 final case class SetInfo(
     name: String,
@@ -13,7 +12,7 @@ final case class SetInfo(
     truncateLut: Long,
     tombstones: Long
 ){
-  def getMemoryUsedBytesH = memoryUsedBytes.toHumanReadableBytes
+  def getMemoryUsedBytesH: String = BytesHelper.toHumanReadableBytes(memoryUsedBytes)
 }
 
 object SetInfo {

@@ -1,7 +1,7 @@
 package models
 
 import com.aerospike.client.Host
-import core.MapHelper
+import controllers.tools.MapHelper
 
 final case class NodeInfo(name: String, host: Host, isActive: Boolean, build: String, clusterSize: Int, clientConnections: Long, migratePartitionsRemaining: Long)
 

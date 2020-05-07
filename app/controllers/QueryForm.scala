@@ -5,7 +5,7 @@ import play.api.data.Forms._
 object QueryForm {
   case class Data(key: String)
 
-  val queryForm = Form(
+  val queryForm: Form[Data] = Form(
     mapping(
       "Key" -> nonEmptyText,
     )(Data.apply)(Data.unapply)

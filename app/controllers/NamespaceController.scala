@@ -1,8 +1,8 @@
 package controllers
 
 import controllers.QueryForm.queryForm
-import core.AerospikeContext
 import javax.inject.Inject
+import models.AerospikeContext
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}

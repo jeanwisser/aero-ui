@@ -1,19 +1,12 @@
-package core
+package models
 
-import client.Aerospike
+import models.client.Aerospike
 import com.aerospike.client.Info
 import com.aerospike.client.cluster.Node
-import models.AerospikeRecord
-import models.NamespaceInfo
-import models.NodeInfo
-import models.SeedNode
-import models.SetInfo
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 final case class AerospikeContext(
     client: Aerospike,
