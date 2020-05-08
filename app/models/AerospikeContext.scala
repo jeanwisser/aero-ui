@@ -6,7 +6,9 @@ import com.aerospike.client.cluster.Node
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 final case class AerospikeContext(
     client: Aerospike,
@@ -38,7 +40,6 @@ object AerospikeContext {
     Aerospike(SeedNode(host, port)).map { client =>
       val nodes      = getNodes(client)
       val namespaces = getNamespacesInformation(nodes.head)
-      val sets       = namespaces.flatMap(n => getSetsInformation(nodes.head, n._1))
       new AerospikeContext(client, nodes.map(n => getNodeInformation(n)), namespaces)
     }
   }

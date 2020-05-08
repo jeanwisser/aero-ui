@@ -37,6 +37,11 @@ class ConnexionController @Inject()(messagesAction: MessagesActionBuilder, compo
     )
   }
 
+  def closeConnection(host: String, port: Int): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
+    Aerospike.deleteConnectionFromPool(SeedNode(host, port))
+    Ok(views.html.index(connexionForm.fill(Data("127.0.0.1", 3000))))
+  }
+
   def redirectIfError(result: Try[Future[Result]])(implicit messagesRequestHeader: MessagesRequestHeader): Future[Result] = {
     result match {
       case Failure(exception) => Future(Redirect(routes.ConnexionController.index()).flashing("exception" -> exception.getMessage))

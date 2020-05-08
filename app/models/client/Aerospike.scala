@@ -1,12 +1,18 @@
 package models.client
 
 import com.aerospike.client._
-import com.aerospike.client.cluster.{ClusterStats, Node}
-import com.aerospike.client.policy.{ClientPolicy, InfoPolicy, QueryPolicy, WritePolicy}
+import com.aerospike.client.cluster.ClusterStats
+import com.aerospike.client.cluster.Node
+import com.aerospike.client.policy.ClientPolicy
+import com.aerospike.client.policy.InfoPolicy
+import com.aerospike.client.policy.QueryPolicy
+import com.aerospike.client.policy.WritePolicy
 import models.SeedNode
 
 import scala.collection.mutable
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -18,9 +24,9 @@ final case class Aerospike(connexion: AerospikeClient) {
     Try(client.get(qPolicy, new Key(ns, set, key))).map(Option(_))
   }
 
-  def getNodes: Try[Array[Node]] = Try(client.getNodes)
-
+  def getNodes: Try[Array[Node]]         = Try(client.getNodes)
   def getClusterStats: Try[ClusterStats] = Try(client.getClusterStats)
+  def close(): Unit                      = client.close()
 }
 
 object Aerospike {
@@ -31,7 +37,8 @@ object Aerospike {
     if (!connectionPool.contains(aerospikeHost.toString)) {
       Try(new AerospikeClient(getDefaultPolicy, aerospikeHost)) match {
         case Success(connexion) if connexion.isConnected =>
-          connectionPool.addOne((aerospikeHost.toString, new Aerospike(connexion))); Success(connectionPool(aerospikeHost.toString))
+          connectionPool.addOne((aerospikeHost.toString, new Aerospike(connexion)))
+          Success(connectionPool(aerospikeHost.toString))
         case Success(connexion) if !connexion.isConnected =>
           Failure(new AerospikeException(s"Could not connect to Aerospike : ${connexion.getClusterStats}"))
         case Failure(e) => Failure(new AerospikeException(s"Could not connect to Aerospike : ${e}"))
@@ -46,5 +53,15 @@ object Aerospike {
     cPolicy.timeout = 60000
     cPolicy.maxConnsPerNode = 10000
     cPolicy
+  }
+
+  def deleteConnectionFromPool(seedNode: SeedNode): Unit = {
+    val aerospikeHost = new Host(seedNode.host, seedNode.port)
+    if (connectionPool.contains(aerospikeHost.toString)) {
+      connectionPool.get(aerospikeHost.toString).foreach { connection =>
+        connection.close()
+      }
+      connectionPool.remove(aerospikeHost.toString)
+    }
   }
 }

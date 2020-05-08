@@ -6,6 +6,7 @@
 # An example controller showing a sample home page
 GET     /                                   controllers.ConnexionController.index
 POST    /                                   controllers.ConnexionController.handleConnexionForm
+GET     /:host/:port                        controllers.ConnexionController.closeConnection(host: String, port: Int)
 GET     /cluster/:host/:port                controllers.ClusterController.cluster(host: String, port: Int)
 GET     /namespace/:host/:port/:name        controllers.NamespaceController.namespace(host: String, port: Int, name: String, set: Option[String])
 POST    /namespace/host/port/name           controllers.NamespaceController.handleQueryForm(host: String, port: Int, name: String, set: String)
