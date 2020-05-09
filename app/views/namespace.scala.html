@@ -1,4 +1,4 @@
-@(host: String, port: Int, namespaces: List[NamespaceInfo], sets: List[SetInfo], selectedNamespaceName: String, selectedSet: SetInfo, queryForm: Form[QueryForm.Data], record: Option[AerospikeRecord])(implicit request: MessagesRequestHeader)
+@(host: String, port: Int, namespaces: List[NamespaceInfo], sets: List[SetInfo], selectedNamespaceName: String, selectedSet: SetInfo, queryForm: Form[QueryForm.Data], records: Iterable[AerospikeRecord])(implicit request: MessagesRequestHeader)
 @import helper._
 @implicitField = @{ helper.FieldConstructor(customFormNamespace.f) }
 
@@ -96,41 +96,37 @@
                             </div>
                         </div>
                     </div>
-                    @if(record.isDefined) {
                     <div class="container">
                         <div class="card events-card">
                             <header class="card-header">
                                 <p class="card-header-title">
-                                    Query results
+                                    @if(records.size > 1){Preview}else{Query results}
                                 </p>
                             </header>
                             <div class="card-table">
                                 <div class="content">
-                                    <table class="table is-fullwidth is-striped">
+                                    <table class="table is-fullwidth is-narrow is-striped">
                                         <tr>
                                             <th>PK</th>
                                             <th>Generation</th>
                                             <th>Expiration</th>
-                                            @for(binName <- record.get.bins.keys){
-                                            <th>@binName</th>
-                                            }
+                                            <th>Bins</th>
                                         </tr>
                                         <tbody>
+                                        @for(record <- records) {
                                         <tr class="" >
-                                            <td>@record.get.key</td>
-                                            <td>@record.get.generation</td>
-                                            <td>@record.get.expiration</td>
-                                            @for(binValue <- record.get.bins.values){
-                                            <td>@binValue</td>
-                                            }
+                                            <td>@if(record.key.isDefined){record.key}else{-}</td>
+                                            <td>@record.generation</td>
+                                            <td>@record.expiration</td>
+                                            <td>@record.bins</td>
                                         </tr>
+                                        }
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    }
                 </div>
             </section>
         </div>

@@ -27,10 +27,20 @@ final case class AerospikeContext(
     client.get(namespace, set, key).map {
       case Success(optRecord) =>
         optRecord match {
-          case Some(record) => Right(AerospikeRecord(key, record))
+          case Some(record) => Right(AerospikeRecord(Some(key), record))
           case None         => Left(s"Could not find key $key in set $set")
         }
       case Failure(e) => Left(s"Error querying namespace $namespace, set $set with key $key: $e")
+    }
+  }
+
+  def getSetPreview(namespace: String, set: String): Future[Either[String, Iterable[AerospikeRecord]]] = {
+    client.scan(namespace, set, 10).map {
+      case Success(records) =>
+        Right(records.map {
+          case (key, record) => AerospikeRecord(key, record)
+        })
+      case Failure(e) => Left(s"Error scanning namespace $namespace, set $set: $e")
     }
   }
 }

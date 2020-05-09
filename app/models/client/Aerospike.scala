@@ -3,7 +3,12 @@ package models.client
 import com.aerospike.client._
 import com.aerospike.client.cluster.ClusterStats
 import com.aerospike.client.cluster.Node
-import com.aerospike.client.policy.{ClientPolicy, InfoPolicy, Priority, QueryPolicy, ScanPolicy, WritePolicy}
+import com.aerospike.client.policy.ClientPolicy
+import com.aerospike.client.policy.InfoPolicy
+import com.aerospike.client.policy.Priority
+import com.aerospike.client.policy.QueryPolicy
+import com.aerospike.client.policy.ScanPolicy
+import com.aerospike.client.policy.WritePolicy
 import models.SeedNode
 
 import scala.collection.mutable
@@ -18,8 +23,9 @@ final case class Aerospike(connexion: AerospikeClient) {
 
   def put(ns: String, set: String, key: String, value: String): Future[Try[Unit]] = Future {
     val wPolicy = new WritePolicy()
-    val bin = new Bin("", value)
-    Try(client.put(wPolicy, new Key(ns, set, key), bin))
+    val bin     = new Bin("bin1", value)
+    val bin2     = new Bin("bin2", value)
+    Try(client.put(wPolicy, new Key(ns, set, key), bin, bin2))
   }
 
   def get(ns: String, set: String, key: String): Future[Try[Option[Record]]] = Future {
@@ -27,29 +33,28 @@ final case class Aerospike(connexion: AerospikeClient) {
     Try(connexion.get(qPolicy, new Key(ns, set, key))).map(Option(_))
   }
 
-  def scan(ns: String, set: String, limit: Int): Seq[Record] = {
+  def scan(ns: String, set: String, limit: Int): Future[Try[List[(Option[String], Record)]]] = Future {
     val sPolicy = new ScanPolicy
     sPolicy.concurrentNodes = true
     sPolicy.priority = Priority.LOW
-    sPolicy.includeBinData = false
-    sPolicy.scanPercent = 1
+    sPolicy.includeBinData = true
+    sPolicy.scanPercent = 100
 
-    val records = new mutable.ListBuffer[Record]
+    val records = new mutable.ListBuffer[(Option[String], Record)]
     val callback = new ScanCallback {
       override def scanCallback(key: Key, record: Record): Unit = {
-        if(records.size < limit){
-          records.addOne(record)
+        if (records.size < limit) {
+          if (key.userKey != null) {
+            records.addOne(Some(key.userKey.toString), record)
+          }
+          records.addOne(None, record)
         }
       }
     }
-
-    client.scanAll(sPolicy, ns, set, callback)
-    records.toList
+    Try(client.scanAll(sPolicy, ns, set, callback)).map(_ => records.toList)
   }
 
-
-
-  def getNodes: Try[Array[Node]]         = Try(connexion.getNodes)
+  def getNodes: Try[Array[Node]] = Try(connexion.getNodes)
   def close(): Unit              = connexion.close()
 }
 
