@@ -31,23 +31,27 @@ object Aerospike {
   def apply(seedNode: SeedNode): Try[Aerospike] = {
     val aerospikeHost = new Host(seedNode.host, seedNode.port)
     if (!connectionPool.contains(aerospikeHost.toString)) {
-      Try(new AerospikeClient(getDefaultPolicy, aerospikeHost)) match {
-        case Success(connexion) if connexion.isConnected =>
-          connectionPool.addOne((aerospikeHost.toString, new Aerospike(connexion)))
-          Success(connectionPool(aerospikeHost.toString))
-        case Success(connexion) if !connexion.isConnected =>
-          Failure(new AerospikeException(s"Could not connect to Aerospike : ${connexion.getClusterStats}"))
-        case Failure(e) => Failure(new AerospikeException(s"Could not connect to Aerospike : ${e}"))
-      }
+      tryCreateNewClient(aerospikeHost)
     } else {
       Success(connectionPool(aerospikeHost.toString))
+    }
+  }
+
+  def tryCreateNewClient(aerospikeHost: Host): Try[Aerospike] = {
+    Try(new AerospikeClient(getDefaultPolicy, aerospikeHost)) match {
+      case Success(connexion) if connexion.isConnected =>
+        connectionPool.addOne((aerospikeHost.toString, new Aerospike(connexion)))
+        Success(connectionPool(aerospikeHost.toString))
+      case Success(connexion) if !connexion.isConnected =>
+        Failure(new AerospikeException(s"Could not connect to Aerospike : ${connexion.getClusterStats}"))
+      case Failure(e) => Failure(new AerospikeException(s"Could not connect to Aerospike : ${e}"))
     }
   }
 
   def getDefaultPolicy: ClientPolicy = {
     val cPolicy = new ClientPolicy()
     cPolicy.timeout = 10000
-    cPolicy.maxConnsPerNode = 1
+    cPolicy.maxConnsPerNode = 50
     cPolicy
   }
 
