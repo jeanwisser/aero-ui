@@ -1,5 +1,5 @@
 @(host: String, port: Int, nodes: Set[NodeInfo], namespaces: List[NamespaceInfo])(implicit request: MessagesRequestHeader)
-@main("AeroUI - Cluster overview", host, port, namespaces) {
+@main("Cluster overview", host, port, namespaces) {
 <section class="hero welcome is-small">
     @request.flash.data.map{ case (name, value) =>
     <div class="columns">

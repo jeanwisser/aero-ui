@@ -2,7 +2,7 @@
 @import helper._
 @implicitField = @{ helper.FieldConstructor(customFormNamespace.f) }
 
-@main("namespace",host, port, namespaces) {
+@main("Namespace " + selectedNamespaceName ,host, port, namespaces) {
 <section class="hero welcome is-small">
     @request.flash.data.map{ case (name, value) =>
     <div class="columns">
