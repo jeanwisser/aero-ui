@@ -50,8 +50,8 @@ object Aerospike {
 
   def getDefaultPolicy: ClientPolicy = {
     val cPolicy = new ClientPolicy()
-    cPolicy.timeout = 60000
-    cPolicy.maxConnsPerNode = 10000
+    cPolicy.timeout = 10000
+    cPolicy.maxConnsPerNode = 1
     cPolicy
   }
 
