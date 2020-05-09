@@ -17,3 +17,5 @@ For production environment, it is recommended to override the default with your 
 docker run -e APPLICATION_SECRET`="mysecretkey" -d --rm -p 9000:9000 jeanwisser/aero-ui:latest
 ```
 For more details: https://www.playframework.com/documentation/2.8.x/ApplicationSecret
+
+![screenshot](https://raw.githubusercontent.com/jeanwisser/aero-ui/master/assets/aero-ui1.png)
