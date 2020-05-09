@@ -17,16 +17,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 final case class Aerospike(connexion: AerospikeClient) {
-  val client: AerospikeClient = connexion
-
   def get(ns: String, set: String, key: String): Future[Try[Option[Record]]] = Future {
     val qPolicy = new QueryPolicy()
-    Try(client.get(qPolicy, new Key(ns, set, key))).map(Option(_))
+    Try(connexion.get(qPolicy, new Key(ns, set, key))).map(Option(_))
   }
-
-  def getNodes: Try[Array[Node]]         = Try(client.getNodes)
-  def getClusterStats: Try[ClusterStats] = Try(client.getClusterStats)
-  def close(): Unit                      = client.close()
+  def getNodes: Try[Array[Node]] = Try(connexion.getNodes)
+  def close(): Unit              = connexion.close()
 }
 
 object Aerospike {
