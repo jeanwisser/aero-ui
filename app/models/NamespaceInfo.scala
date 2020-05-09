@@ -1,6 +1,7 @@
 package models
 
-import controllers.tools.{BytesHelper, MapHelper}
+import controllers.tools.ReadableHelper
+import controllers.tools.MapHelper
 
 import scala.util.Try
 
@@ -18,13 +19,14 @@ final case class NamespaceInfo(
     sets: Map[String, SetInfo]
 ) {
 
-  def getMemoryUsedBytesH      = BytesHelper.toHumanReadableBytes(memoryUsedBytes)
-  def getMemoryTotalSizeH      = BytesHelper.toHumanReadableBytes(memoryTotalSize)
-  def getDiskUsedBytesH        = diskUsedBytes.map(d => BytesHelper.toHumanReadableBytes(d))
-  def getDiskTotalSizeH        = diskTotalSize.map(d => BytesHelper.toHumanReadableBytes(d))
-  def getMemoryUsagePercentage = 100 - memoryFreePercent
-  def getDiskUsagePercentage   = diskFreePercent.map(d => 100 - d)
-  def isUsingDisk              = diskUsedBytes.isDefined && diskTotalSize.isDefined && diskFreePercent.isDefined
+  def getMemoryUsedBytesH: String         = ReadableHelper.toHumanReadableBytes(memoryUsedBytes)
+  def getMemoryTotalSizeH: String         = ReadableHelper.toHumanReadableBytes(memoryTotalSize)
+  def getDiskUsedBytesH: Option[String]   = diskUsedBytes.map(d => ReadableHelper.toHumanReadableBytes(d))
+  def getDiskTotalSizeH: Option[String]   = diskTotalSize.map(d => ReadableHelper.toHumanReadableBytes(d))
+  def getMemoryUsagePercentage: Int       = 100 - memoryFreePercent
+  def getDiskUsagePercentage: Option[Int] = diskFreePercent.map(d => 100 - d)
+  def isUsingDisk: Boolean                = diskUsedBytes.isDefined && diskTotalSize.isDefined && diskFreePercent.isDefined
+  def getObjectsCountH: String            = ReadableHelper.toHumanReadableNumber(objectsCount)
 
   def getSetInformation(set: String): Either[String, SetInfo] = {
     sets.get(set) match {

@@ -1,6 +1,6 @@
 package controllers.tools
 
-object BytesHelper {
+object ReadableHelper {
   def toHumanReadableBytes(bytes: Long): String = {
     if (-1000 < bytes && bytes < 1000) return s"$bytes B"
     val ci = Array("k", "M", "G", "T", "P")
@@ -13,5 +13,10 @@ object BytesHelper {
 
     val (index, result) = loop(0, bytes)
     f"${result / 1000}%1.2f ${ci(index)}B"
+  }
+
+  def toHumanReadableNumber(number: Long): String = {
+    val formatter = java.text.NumberFormat.getIntegerInstance
+    formatter.format(number)
   }
 }

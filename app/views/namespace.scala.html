@@ -81,7 +81,7 @@
                                     @for((set, index) <- sets.zipWithIndex) {
                                     @if(selectedSet.name == set.name){
                                     <tr class="">
-                                        <td>@set.objectsCount</td>
+                                        <td>@set.getObjectsCountH</td>
                                         <td>@set.getMemoryUsedBytesH</td>
                                         <td>@set.disableEviction</td>
                                         <td>@set.enableXdr</td>
