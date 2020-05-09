@@ -30,7 +30,7 @@ class ConnexionController @Inject()(messagesAction: MessagesActionBuilder, compo
         Future(BadRequest(views.html.index(formWithErrors)))
       },
       data => {
-        redirectIfError(Aerospike(SeedNode(data.host, data.port)).map { _ =>
+        redirectIfConnexionError(Aerospike(SeedNode(data.host, data.port)).map { _ =>
           Future(Redirect(routes.ClusterController.cluster(data.host, data.port)))
         })
       }
@@ -39,10 +39,10 @@ class ConnexionController @Inject()(messagesAction: MessagesActionBuilder, compo
 
   def closeConnection(host: String, port: Int): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
     Aerospike.deleteConnectionFromPool(SeedNode(host, port))
-    Ok(views.html.index(connexionForm.fill(Data("127.0.0.1", 3000))))
+    Redirect(routes.ConnexionController.index()).flashing("message" -> s"Closed connection to host $host")
   }
 
-  def redirectIfError(result: Try[Future[Result]])(implicit messagesRequestHeader: MessagesRequestHeader): Future[Result] = {
+  def redirectIfConnexionError(result: Try[Future[Result]])(implicit messagesRequestHeader: MessagesRequestHeader): Future[Result] = {
     result match {
       case Failure(exception) => Future(Redirect(routes.ConnexionController.index()).flashing("exception" -> exception.getMessage))
       case Success(success) => success

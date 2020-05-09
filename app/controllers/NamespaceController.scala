@@ -29,7 +29,7 @@ class NamespaceController @Inject()(messagesAction: MessagesActionBuilder, compo
   }
 
   def getNamespacePageResult(host: String, port: Int, namespaceName: String, setName: Option[String], keyToQuery: Option[String])(implicit request: MessagesRequest[AnyContent]): Future[Result] = {
-    redirectIfError(AerospikeContext(host, port).map{ context =>
+    redirectIfConnexionError(AerospikeContext(host, port).map{ context =>
       val setsContext = for {
         selectedNamespace <- context.getNamespaceInformation(namespaceName)
         setsInfo <- selectedNamespace.getNamespaceSets
@@ -57,11 +57,10 @@ class NamespaceController @Inject()(messagesAction: MessagesActionBuilder, compo
     })
   }
 
-  def redirectIfError(result: Try[Future[Result]])(implicit messagesRequestHeader: MessagesRequestHeader): Future[Result] = {
+  def redirectIfConnexionError(result: Try[Future[Result]])(implicit messagesRequestHeader: MessagesRequestHeader): Future[Result] = {
     result match {
       case Failure(exception) => Future(Redirect(routes.ConnexionController.index()).flashing("exception" -> exception.getMessage))
       case Success(success) => success
     }
   }
-
 }

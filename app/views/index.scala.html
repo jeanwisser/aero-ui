@@ -23,10 +23,18 @@
         <div class="columns is-centered">
             <div class="column is-4">
                 @request.flash.data.map{ case (name, value) =>
+                @if(name=="exception"){
                 <div class="notification is-danger is-size-7">
                     <button class="delete"></button>
                     @value
                 </div>
+                }
+                @if(name=="message"){
+                <div class="notification is-success is-size-7">
+                    <button class="delete"></button>
+                    @value
+                </div>
+                }
                 }
             </div>
         </div>
@@ -61,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
 </script>
 
 
