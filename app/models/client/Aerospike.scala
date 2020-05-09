@@ -1,32 +1,17 @@
 package models.client
 
 import com.aerospike.client._
-import com.aerospike.client.cluster.ClusterStats
 import com.aerospike.client.cluster.Node
-import com.aerospike.client.policy.ClientPolicy
-import com.aerospike.client.policy.InfoPolicy
-import com.aerospike.client.policy.Priority
-import com.aerospike.client.policy.QueryPolicy
-import com.aerospike.client.policy.ScanPolicy
-import com.aerospike.client.policy.WritePolicy
+import com.aerospike.client.policy.{ClientPolicy, Priority, QueryPolicy, ScanPolicy}
 import models.SeedNode
 
 import scala.collection.mutable
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 final case class Aerospike(connexion: AerospikeClient) {
   val client: AerospikeClient = connexion
-
-  def put(ns: String, set: String, key: String, value: String): Future[Try[Unit]] = Future {
-    val wPolicy = new WritePolicy()
-    val bin     = new Bin("bin1", value)
-    val bin2     = new Bin("bin2", value)
-    Try(client.put(wPolicy, new Key(ns, set, key), bin, bin2))
-  }
 
   def get(ns: String, set: String, key: String): Future[Try[Option[Record]]] = Future {
     val qPolicy = new QueryPolicy()
@@ -38,7 +23,6 @@ final case class Aerospike(connexion: AerospikeClient) {
     sPolicy.concurrentNodes = true
     sPolicy.priority = Priority.LOW
     sPolicy.includeBinData = true
-    sPolicy.scanPercent = 100
 
     val records = new mutable.ListBuffer[(Option[String], Record)]
     val callback = new ScanCallback {
@@ -51,7 +35,20 @@ final case class Aerospike(connexion: AerospikeClient) {
         }
       }
     }
-    Try(client.scanAll(sPolicy, ns, set, callback)).map(_ => records.toList)
+
+    Try {
+      // First try with only 1% of the partitions
+      sPolicy.scanPercent = 1
+      client.scanAll(sPolicy, ns, set, callback)
+      if (records.size >= limit) {
+        records.toList
+      } else {
+        // If first scan does not return results, we try again with 100%
+        sPolicy.scanPercent = 100
+        client.scanAll(sPolicy, ns, set, callback)
+        records.toList
+      }
+    }
   }
 
   def getNodes: Try[Array[Node]] = Try(connexion.getNodes)
