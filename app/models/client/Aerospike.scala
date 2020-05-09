@@ -3,10 +3,7 @@ package models.client
 import com.aerospike.client._
 import com.aerospike.client.cluster.ClusterStats
 import com.aerospike.client.cluster.Node
-import com.aerospike.client.policy.ClientPolicy
-import com.aerospike.client.policy.InfoPolicy
-import com.aerospike.client.policy.QueryPolicy
-import com.aerospike.client.policy.WritePolicy
+import com.aerospike.client.policy.{ClientPolicy, InfoPolicy, Priority, QueryPolicy, ScanPolicy, WritePolicy}
 import models.SeedNode
 
 import scala.collection.mutable
@@ -17,11 +14,42 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 final case class Aerospike(connexion: AerospikeClient) {
+  val client: AerospikeClient = connexion
+
+  def put(ns: String, set: String, key: String, value: String): Future[Try[Unit]] = Future {
+    val wPolicy = new WritePolicy()
+    val bin = new Bin("", value)
+    Try(client.put(wPolicy, new Key(ns, set, key), bin))
+  }
+
   def get(ns: String, set: String, key: String): Future[Try[Option[Record]]] = Future {
     val qPolicy = new QueryPolicy()
     Try(connexion.get(qPolicy, new Key(ns, set, key))).map(Option(_))
   }
-  def getNodes: Try[Array[Node]] = Try(connexion.getNodes)
+
+  def scan(ns: String, set: String, limit: Int): Seq[Record] = {
+    val sPolicy = new ScanPolicy
+    sPolicy.concurrentNodes = true
+    sPolicy.priority = Priority.LOW
+    sPolicy.includeBinData = false
+    sPolicy.scanPercent = 1
+
+    val records = new mutable.ListBuffer[Record]
+    val callback = new ScanCallback {
+      override def scanCallback(key: Key, record: Record): Unit = {
+        if(records.size < limit){
+          records.addOne(record)
+        }
+      }
+    }
+
+    client.scanAll(sPolicy, ns, set, callback)
+    records.toList
+  }
+
+
+
+  def getNodes: Try[Array[Node]]         = Try(connexion.getNodes)
   def close(): Unit              = connexion.close()
 }
 

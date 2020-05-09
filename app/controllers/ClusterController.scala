@@ -12,6 +12,9 @@ class ClusterController @Inject() (messagesAction: MessagesActionBuilder, compon
 
   def cluster(host: String, port: Int): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
     redirectIfConnexionError(AerospikeContext(host, port).map { context =>
+//    for (i <- 0 until 100) {
+//      context.client.put("test", "set1", s"ok$i", "coucou")
+//    }
       Ok(views.html.cluster(host, port, context.nodes.toSet, context.namespaces.values.toList))
     })
   }

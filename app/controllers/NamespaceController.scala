@@ -40,6 +40,10 @@ class NamespaceController @Inject()(messagesAction: MessagesActionBuilder, compo
         case Left(failureMsg) =>
           Future(Redirect(routes.ClusterController.cluster(host, port)).flashing("exception" -> failureMsg))
         case Right((sets, selecetdSet)) =>
+
+          context.client.scan(namespaceName, selecetdSet.name, 10)
+
+
           keyToQuery match {
             case Some(key) =>
               val record = context.getRecord(namespaceName, selecetdSet.name, key)
