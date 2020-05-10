@@ -1,24 +1,16 @@
 package controllers
 
-import models.client.Aerospike
+import controllers.ConnexionForm.{Data, _}
 import javax.inject._
+import models.SeedNode
+import models.client.Aerospike
 import play.api.mvc._
-import ConnexionForm.{Data, _}
-import models.{AerospikeRecord, NamespaceInfo, NodeInfo, SeedNode, SetInfo}
-import QueryForm._
-import com.aerospike.client.Record
-import play.api.data.Form
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 @Singleton
-class ConnexionController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)(implicit ec: ExecutionContext)
-  extends AbstractController(components) {
+class ConnexionController @Inject() (messagesAction: MessagesActionBuilder, components: ControllerComponents)(implicit ec: ExecutionContext)
+    extends AbstractController(components) {
 
   def index(): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
     Ok(views.html.index(connexionForm.fill(Data("127.0.0.1", 3000))))
@@ -30,9 +22,10 @@ class ConnexionController @Inject()(messagesAction: MessagesActionBuilder, compo
         Future(BadRequest(views.html.index(formWithErrors)))
       },
       data => {
-        redirectIfConnexionError(Aerospike(SeedNode(data.host, data.port)).map { _ =>
-          Future(Redirect(routes.ClusterController.cluster(data.host, data.port)))
-        })
+        Aerospike(SeedNode(data.host, data.port)) match {
+          case Failure(exception) => Future(Redirect(routes.ConnexionController.index()).flashing("exception" -> exception.getMessage))
+          case Success(_)         => Future(Redirect(routes.ClusterController.cluster(data.host, data.port)))
+        }
       }
     )
   }
@@ -40,12 +33,5 @@ class ConnexionController @Inject()(messagesAction: MessagesActionBuilder, compo
   def closeConnection(host: String, port: Int): Action[AnyContent] = messagesAction { implicit request: MessagesRequest[AnyContent] =>
     Aerospike.deleteConnectionFromPool(SeedNode(host, port))
     Redirect(routes.ConnexionController.index()).flashing("message" -> s"Closed connection to host $host")
-  }
-
-  def redirectIfConnexionError(result: Try[Future[Result]])(implicit messagesRequestHeader: MessagesRequestHeader): Future[Result] = {
-    result match {
-      case Failure(exception) => Future(Redirect(routes.ConnexionController.index()).flashing("exception" -> exception.getMessage))
-      case Success(success) => success
-    }
   }
 }

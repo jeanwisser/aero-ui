@@ -9,7 +9,7 @@
 <ul class="menu-list">
   <li><a href="@routes.ClusterController.cluster(host, port)">Namespaces</a>
   @for(namespace <- namespaces) {
-    <ul><a href="@routes.NamespaceController.namespace(host, port, namespace.name, None)">@namespace.name</a></ul>
+    <ul><a href="@routes.NamespaceController.namespace(host, port, namespace.name)">@namespace.name</a></ul>
   }
   </li>
 </ul>

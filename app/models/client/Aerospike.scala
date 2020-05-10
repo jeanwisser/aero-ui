@@ -1,26 +1,29 @@
 package models.client
 
 import com.aerospike.client._
-import com.aerospike.client.cluster.ClusterStats
 import com.aerospike.client.cluster.Node
-import com.aerospike.client.policy.ClientPolicy
-import com.aerospike.client.policy.InfoPolicy
-import com.aerospike.client.policy.QueryPolicy
-import com.aerospike.client.policy.WritePolicy
+import com.aerospike.client.policy.{ClientPolicy, QueryPolicy, WritePolicy}
 import models.SeedNode
 
 import scala.collection.mutable
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
-final case class Aerospike(connexion: AerospikeClient) {
+class Aerospike(val connexion: AerospikeClient) {
+
   def get(ns: String, set: String, key: String): Future[Try[Option[Record]]] = Future {
     val qPolicy = new QueryPolicy()
+    qPolicy.setTimeout(3000)
     Try(connexion.get(qPolicy, new Key(ns, set, key))).map(Option(_))
   }
+
+  def delete(ns: String, set: String, key: String): Future[Try[Boolean]] = Future {
+    val wPolicy = new WritePolicy()
+    wPolicy.setTimeout(3000)
+    Try(connexion.delete(wPolicy, new Key(ns, set, key)))
+  }
+
   def getNodes: Try[Array[Node]] = Try(connexion.getNodes)
   def close(): Unit              = connexion.close()
 }

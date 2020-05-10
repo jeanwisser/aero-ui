@@ -2,65 +2,111 @@ package controllers
 
 import controllers.QueryForm.queryForm
 import javax.inject.Inject
-import models.AerospikeContext
+import models.{AerospikeContext, SetInfo}
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
 
-class NamespaceController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)(implicit ec: ExecutionContext)
-  extends AbstractController(components) {
+class NamespaceController @Inject() (messagesAction: MessagesActionBuilder, components: ControllerComponents)(implicit ec: ExecutionContext)
+    extends AbstractController(components) {
 
-  def namespace(host: String, port: Int, namespaceName: String, setName: Option[String]): Action[AnyContent] =
-    messagesAction.async { implicit request: MessagesRequest[AnyContent] =>
-      getNamespacePageResult(host, port, namespaceName, setName, None)
+  final case class NamespacePageContext(context: AerospikeContext, setsInfo: Map[String, SetInfo], selectedSet: SetInfo)
+
+  def namespace(host: String, port: Int, namespaceName: String): Action[AnyContent] =
+    messagesAction { implicit request: MessagesRequest[AnyContent] =>
+      getNamespacePage(host, port, namespaceName, None)
     }
+
+  def namespaceWithSet(host: String, port: Int, namespaceName: String, setName: String): Action[AnyContent] =
+    messagesAction { implicit request: MessagesRequest[AnyContent] =>
+      getNamespacePage(host, port, namespaceName, Some(setName))
+    }
+
+  def getNamespacePage(host: String, port: Int, namespaceName: String, setName: Option[String])(
+      implicit request: MessagesRequest[AnyContent]
+  ): Result = {
+    getNamespacePageContext(host, port, namespaceName, setName) match {
+      case Left(failureMessage) =>
+        Redirect(routes.ClusterController.cluster(host, port)).flashing("exception" -> failureMessage)
+      case Right(NamespacePageContext(context, setsInfo, selectedSet)) =>
+        Ok(
+          views.html
+            .namespace(
+              host,
+              port,
+              context.namespaces.values.toList,
+              setsInfo.values.toList,
+              namespaceName,
+              selectedSet,
+              queryForm,
+              None
+            )
+        )
+    }
+  }
 
   def handleQueryForm(host: String, port: Int, namespaceName: String, setName: String): Action[AnyContent] = messagesAction.async {
     implicit request: MessagesRequest[AnyContent] =>
       queryForm.bindFromRequest.fold(
         _ => {
-          Future(Redirect(routes.NamespaceController.namespace(host, port, namespaceName, Some(setName))))
+          Future(Redirect(routes.NamespaceController.namespaceWithSet(host, port, namespaceName, setName)))
         },
         data => {
-          getNamespacePageResult(host, port, namespaceName, Some(setName), Some(data.key))
+          getNamespacePageContext(host, port, namespaceName, Some(setName)) match {
+            case Left(failureMessage) =>
+              Future(Redirect(routes.ClusterController.cluster(host, port)).flashing("exception" -> failureMessage))
+            case Right(NamespacePageContext(context, setsInfo, selectedSet)) =>
+              val record = context.getRecord(namespaceName, selectedSet.name, data.key)
+              record.map {
+                case Left(failureMessage) =>
+                  Redirect(routes.NamespaceController.namespaceWithSet(host, port, namespaceName, setName))
+                    .flashing("exception" -> failureMessage)
+                case Right(record) =>
+                  Ok(
+                    views.html.namespace(
+                      host,
+                      port,
+                      context.namespaces.values.toList,
+                      setsInfo.values.toList,
+                      namespaceName,
+                      selectedSet,
+                      queryForm,
+                      Some(record)
+                    )
+                  )
+              }
+          }
         }
       )
   }
 
-  def getNamespacePageResult(host: String, port: Int, namespaceName: String, setName: Option[String], keyToQuery: Option[String])(implicit request: MessagesRequest[AnyContent]): Future[Result] = {
-    redirectIfConnexionError(AerospikeContext(host, port).map{ context =>
-      val setsContext = for {
-        selectedNamespace <- context.getNamespaceInformation(namespaceName)
-        setsInfo <- selectedNamespace.getNamespaceSets
-        set <-  selectedNamespace.getSetInformation(setName.getOrElse(setsInfo.keys.head))
-      } yield (setsInfo, set)
-
-      setsContext match {
-        case Left(failureMsg) =>
-          Future(Redirect(routes.ClusterController.cluster(host, port)).flashing("exception" -> failureMsg))
-        case Right((sets, selecetdSet)) =>
-          keyToQuery match {
-            case Some(key) =>
-              val record = context.getRecord(namespaceName, selecetdSet.name, key)
-              record.map {
-                case Left(failureMsg) => Redirect(routes.NamespaceController.namespace(host, port, namespaceName, setName)).flashing("exception" -> failureMsg)
-                case Right(record) =>
-                  Ok(views.html.namespace(host, port, context.namespaces.values.toList, sets.values.toList, namespaceName, selecetdSet, queryForm, Some(record)))
-              }
-            case None =>
-              Future(Ok(
-                views.html
-                  .namespace(host, port, context.namespaces.values.toList, sets.values.toList, namespaceName, selecetdSet, queryForm, None)))
+  def deleteRecord(host: String, port: Int, namespace: String, set: String, key: String): Action[AnyContent] = messagesAction.async {
+    implicit request: MessagesRequest[AnyContent] =>
+      AerospikeContext(host, port) match {
+        case Left(failureMessage) =>
+          Future(Redirect(routes.ClusterController.cluster(host, port)).flashing("exception" -> failureMessage))
+        case Right(context) =>
+          context.deleteRecord(namespace, set, key).map {
+            case Left(failureMessage) =>
+              Redirect(routes.NamespaceController.namespaceWithSet(host, port, namespace, set)).flashing("exception" -> failureMessage)
+            case Right(_) =>
+              Redirect(routes.NamespaceController.namespaceWithSet(host, port, namespace, set))
+                .flashing("message" -> s"Record with PK = $key was successfully deleted from set $set")
           }
       }
-    })
   }
 
-  def redirectIfConnexionError(result: Try[Future[Result]])(implicit messagesRequestHeader: MessagesRequestHeader): Future[Result] = {
-    result match {
-      case Failure(exception) => Future(Redirect(routes.ConnexionController.index()).flashing("exception" -> exception.getMessage))
-      case Success(success) => success
-    }
+  private def getNamespacePageContext(
+      host: String,
+      port: Int,
+      namespace: String,
+      set: Option[String]
+  ): Either[String, NamespacePageContext] = {
+    for {
+      context           <- AerospikeContext(host, port)
+      selectedNamespace <- context.getNamespaceInformation(namespace)
+      setsInfo          <- selectedNamespace.getNamespaceSets
+      selectedSet       <- selectedNamespace.getSetInformation(set.getOrElse(setsInfo.keys.head))
+    } yield NamespacePageContext(context, setsInfo, selectedSet)
   }
 }

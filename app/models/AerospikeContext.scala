@@ -1,19 +1,17 @@
 package models
 
-import models.client.Aerospike
 import com.aerospike.client.Info
 import com.aerospike.client.cluster.Node
+import models.client.Aerospike
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Failure, Success}
 
-final case class AerospikeContext(
-    client: Aerospike,
-    nodes: List[NodeInfo],
-    namespaces: Map[String, NamespaceInfo]
+class AerospikeContext(
+    val client: Aerospike,
+    val nodes: List[NodeInfo],
+    val namespaces: Map[String, NamespaceInfo]
 ) {
 
   def getNamespaceInformation(namespace: String): Either[String, NamespaceInfo] = {
@@ -30,17 +28,27 @@ final case class AerospikeContext(
           case Some(record) => Right(AerospikeRecord(key, record))
           case None         => Left(s"Could not find key $key in set $set")
         }
-      case Failure(e) => Left(s"Error querying namespace $namespace, set $set with key $key: $e")
+      case Failure(exception) => Left(s"Error querying set $set with key $key: $exception")
+    }
+  }
+
+  def deleteRecord(namespace: String, set: String, key: String): Future[Either[String, Unit]] = {
+    client.delete(namespace, set, key).map {
+      case Success(result) =>
+        if (result) Right(()) else Left(s"Could not find record with key $key in set $set")
+      case Failure(exception) => Left(s"An error occurred while deleting record with key $key: $exception")
     }
   }
 }
 
 object AerospikeContext {
-  def apply(host: String, port: Int): Try[AerospikeContext] = {
-    Aerospike(SeedNode(host, port)).map { client =>
-      val nodes      = getNodes(client)
-      val namespaces = getNamespacesInformation(nodes.head)
-      new AerospikeContext(client, nodes.map(n => getNodeInformation(n)), namespaces)
+  def apply(host: String, port: Int): Either[String, AerospikeContext] = {
+    Aerospike(SeedNode(host, port)) match {
+      case Failure(exception) => Left(exception.getMessage)
+      case Success(client) =>
+        val nodes      = getNodes(client)
+        val namespaces = getNamespacesInformation(nodes.head)
+        Right(new AerospikeContext(client, nodes.map(n => getNodeInformation(n)), namespaces))
     }
   }
 
