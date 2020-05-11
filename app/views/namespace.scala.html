@@ -4,16 +4,24 @@
 
 @main("Namespace " + selectedNamespaceName ,host, port, namespaces) {
 <section class="hero welcome is-small">
-    @request.flash.data.map{ case (name, value) =>
     <div class="columns">
         <div class="column is-12">
+            @request.flash.data.map{ case (name, value) =>
+            @if(name=="exception"){
             <div class="notification is-danger is-size-7">
                 <button class="delete"></button>
                 @value
             </div>
+            }
+            @if(name=="message"){
+            <div class="notification is-success is-size-7">
+                <button class="delete"></button>
+                @value
+            </div>
+            }
+            }
         </div>
     </div>
-    }
     <div class="columns">
         <div class="column is-12">
             <div class="container">
@@ -37,7 +45,7 @@
                                 <select>
                                     @for((set, index) <- sets.zipWithIndex) {
                                     <option @if(selectedSet.name== set.name) {selected}
-                                            onclick="location.href='@routes.NamespaceController.namespace(host, port, selectedNamespaceName, Some(set.name))'">
+                                            onclick="location.href='@routes.NamespaceController.namespaceWithSet(host, port, selectedNamespaceName, set.name)'">
                                         @set.name
                                     </option>
                                     }
@@ -47,7 +55,8 @@
 
                     </div>
                     <div class="column is-5">
-                        @helper.form(action = routes.NamespaceController.handleQueryForm(host, port, selectedNamespaceName,
+                        @helper.form(action = routes.NamespaceController.handleQueryForm(host, port,
+                        selectedNamespaceName,
                         selectedSet.name)) {
                         @CSRF.formField
                         @helper.inputText(queryForm("Key"), Symbol("class") -> "input is-normal", Symbol("placeholder")
@@ -106,8 +115,9 @@
                             </header>
                             <div class="card-table">
                                 <div class="content">
-                                    <table class="table is-fullwidth is-striped">
+                                    <table class="table is-fullwidth is-striped is-hoverable">
                                         <tr>
+                                            <th></th>
                                             <th>PK</th>
                                             <th>Generation</th>
                                             <th>Expiration</th>
@@ -116,7 +126,13 @@
                                             }
                                         </tr>
                                         <tbody>
-                                        <tr class="" >
+                                        <tr>
+                                            <td width="5%">
+                                                <a id="open-modal" class="button is-size-7">
+                                                <span class="icon">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </span>
+                                                </a></td>
                                             <td>@record.get.key</td>
                                             <td>@record.get.generation</td>
                                             <td>@record.get.expiration</td>
@@ -128,6 +144,29 @@
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="modal">
+                        <div class="modal-background"></div>
+                        <div class="confirm modal-card">
+                            <header class="modal-card-head">
+                                <p class="modal-card-title">Are you sure ?</p>
+                            </header>
+                            <section class="modal-card-body">
+                                <p>Delete record with PK = @record.get.key</p>
+                            </section>
+                            <footer class="modal-card-foot">
+                                <div class="container">
+                                    <nav class="level">
+                                        <div class="level-left">
+                                            <a class="button is-success" href="@routes.NamespaceController.deleteRecord(host, port, selectedNamespaceName, selectedSet.name, record.get.key)">Yes</a>
+                                        </div>
+                                        <div class="level-left">
+                                            <a id="confirm-delete-no" class="button" href="">Cancel</a>
+                                        </div>
+                                    </nav>
+                                </div>
+                            </footer>
                         </div>
                     </div>
                     }

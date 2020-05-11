@@ -61,6 +61,10 @@ nav.navbar {
     padding: 0.4rem;
 }
 
+.content table td{
+ vertical-align: middle;
+}
+
 .card .content {
   font-size: 14px;
 }
@@ -125,4 +129,8 @@ margin: 1% 0 2% 0;
 .progress:not(:last-child){
  margin-top: 0.2rem;
  margin-bottom:0;
+}
+
+.confirm{
+ width: 20%;
 }
