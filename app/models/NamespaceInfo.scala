@@ -7,7 +7,7 @@ import scala.util.Try
 
 final case class NamespaceInfo(
     name: String,
-    objectsCount: Long,
+    masterObjects: Long,
     storageEngine: String,
     replicationFactor: Int,
     memoryUsedBytes: Long,
@@ -15,8 +15,7 @@ final case class NamespaceInfo(
     memoryTotalSize: Long,
     diskTotalSize: Option[Long],
     memoryFreePercent: Int,
-    diskFreePercent: Option[Int],
-    sets: Map[String, SetInfo]
+    diskFreePercent: Option[Int]
 ) {
 
   def getMemoryUsedBytesH: String         = ReadableHelper.toHumanReadableBytes(memoryUsedBytes)
@@ -26,28 +25,14 @@ final case class NamespaceInfo(
   def getMemoryUsagePercentage: Int       = 100 - memoryFreePercent
   def getDiskUsagePercentage: Option[Int] = diskFreePercent.map(d => 100 - d)
   def isUsingDisk: Boolean                = diskUsedBytes.isDefined && diskTotalSize.isDefined && diskFreePercent.isDefined
-  def getObjectsCountH: String            = ReadableHelper.toHumanReadableNumber(objectsCount)
-
-  def getSetInformation(set: String): Either[String, SetInfo] = {
-    sets.get(set) match {
-      case Some(setInfo) => Right(setInfo)
-      case None          => Left(s"Set $set not found")
-    }
-  }
-
-  def getNamespaceSets: Either[String, Map[String, SetInfo]] = {
-    if (sets.isEmpty) {
-      Left(s"Namespace $name does contains any data")
-    } else {
-      Right(sets)
-    }
-  }
+  def getMasterObjectsCountH: String      = ReadableHelper.toHumanReadableNumber(masterObjects)
+  def getReplicasObjectsCountH: String    = ReadableHelper.toHumanReadableNumber(Math.max(masterObjects * (replicationFactor - 1), 0))
 }
 
 object NamespaceInfo {
-  def apply(name: String, properties: String, sets: Map[String, SetInfo]): NamespaceInfo = {
+  def apply(name: String, properties: String): NamespaceInfo = {
     val propertiesMap                   = MapHelper.toMap(properties, ';')
-    def getObjects: Long                = MapHelper.getValue(propertiesMap, "objects", _.toLong)
+    def getMasterObjects: Long          = MapHelper.getValue(propertiesMap, "master_objects", _.toLong)
     def getStorageEngine: String        = MapHelper.getValue(propertiesMap, "storage-engine", _.toString)
     def getReplicationFactor: Int       = MapHelper.getValue(propertiesMap, "replication-factor", _.toInt)
     def getMemoryUsedBytes: Long        = MapHelper.getValue(propertiesMap, "memory_used_bytes", _.toLong)
@@ -59,7 +44,7 @@ object NamespaceInfo {
 
     NamespaceInfo(
       name,
-      getObjects,
+      getMasterObjects,
       getStorageEngine,
       getReplicationFactor,
       getMemoryUsedBytes,
@@ -67,8 +52,7 @@ object NamespaceInfo {
       getMemoryTotalSize,
       getDiskTotalSize,
       getMemoryFreePercent,
-      getDiskFreePercent,
-      sets
+      getDiskFreePercent
     )
   }
 }

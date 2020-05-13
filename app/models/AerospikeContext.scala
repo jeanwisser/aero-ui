@@ -2,22 +2,41 @@ package models
 
 import com.aerospike.client.Info
 import com.aerospike.client.cluster.Node
+import controllers.tools.ListHelper
 import models.client.Aerospike
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.Failure
+import scala.util.Success
 
 class AerospikeContext(
     val client: Aerospike,
     val nodes: List[NodeInfo],
-    val namespaces: Map[String, NamespaceInfo]
+    val namespaces: Map[String, NamespaceInfo],
+    val sets: Map[SetKey, SetInfo]
 ) {
 
   def getNamespaceInformation(namespace: String): Either[String, NamespaceInfo] = {
     namespaces.get(namespace) match {
       case Some(namespaceInfo) => Right(namespaceInfo)
       case None                => Left(s"Namespace $namespace not found")
+    }
+  }
+
+  def getSetInformation(namespace: String, set: String): Either[String, SetInfo] = {
+    sets.get(SetKey(set, namespace)) match {
+      case Some(setInfo) => Right(setInfo)
+      case None          => Left(s"Set $set not found")
+    }
+  }
+
+  def getNamespaceSets(namespace: String): Either[String, Map[SetKey, SetInfo]] = {
+    val namespaceSets = sets.filter(s => s._1.namespace == namespace)
+    if (namespaceSets.isEmpty) {
+      Left(s"Namespace $namespace does contains any data")
+    } else {
+      Right(namespaceSets)
     }
   }
 
@@ -46,9 +65,11 @@ object AerospikeContext {
     Aerospike(SeedNode(host, port)) match {
       case Failure(exception) => Left(exception.getMessage)
       case Success(client) =>
-        val nodes      = getNodes(client)
-        val namespaces = getNamespacesInformation(nodes.head)
-        Right(new AerospikeContext(client, nodes.map(n => getNodeInformation(n)), namespaces))
+        lazy val nodes      = getNodes(client)
+        lazy val namespaces = getNamespacesInformationClusterWide(nodes)
+        lazy val sets       = getSetsInformationClusterWide(nodes)
+        lazy val nodesInfo  = nodes.map(n => getNodeInformation(n))
+        Right(new AerospikeContext(client, nodesInfo, namespaces, sets))
     }
   }
 
@@ -61,28 +82,64 @@ object AerospikeContext {
     NodeInfo(node.getName, node.getHost, node.isActive, details.get("build"), details.get("statistics"))
   }
 
-  def getNamespacesInformation(node: Node): Map[String, NamespaceInfo] = {
-    Info
-      .request(null, node, "namespaces")
-      .split(';')
-      .map { namespace =>
-        val namespaceProperties = Info.request(null, node, s"namespace/$namespace")
-        val sets                = getSetsInformation(node, namespace)
-        NamespaceInfo(namespace, namespaceProperties, sets)
+  def getSetsInformationClusterWide(nodes: List[Node]): Map[SetKey, SetInfo] = {
+    nodes
+      .flatMap(node => getSetsInformation(node))
+      .groupBy(_.name)
+      .map {
+        case (name, sets) =>
+          SetKey(name, sets.head.namespace) -> SetInfo(
+            name,
+            sets.head.namespace,
+            sets.map(_.objectsCount).sum,
+            sets.map(_.memoryUsedBytes).sum,
+            sets.head.disableEviction,
+            sets.head.enableXdr,
+            sets.map(_.stopWritesCount).sum,
+            sets.map(_.truncateLut).max,
+            sets.map(_.tombstones).sum
+          )
       }
-      .map(n => (n.name, n))
-      .toMap
   }
 
-  def getSetsInformation(node: Node, namespace: String): Map[String, SetInfo] = {
+  def getNamespacesInformationClusterWide(nodes: List[Node]): Map[String, NamespaceInfo] = {
+    nodes
+      .flatMap(node => getNamespacesInformation(node))
+      .groupBy(_.name)
+      .map {
+        case (name, namespaces) =>
+          name -> NamespaceInfo(
+            name,
+            namespaces.map(_.masterObjects).sum,
+            namespaces.head.storageEngine,
+            namespaces.head.replicationFactor,
+            namespaces.map(_.memoryUsedBytes).sum,
+            ListHelper.sumListRec[Long](namespaces.map(_.diskUsedBytes).toList, 0),
+            namespaces.map(_.memoryTotalSize).sum,
+            ListHelper.sumListRec[Long](namespaces.map(_.diskTotalSize).toList, 0),
+            namespaces.map(_.memoryFreePercent).sum / namespaces.size,
+            ListHelper.sumListRec[Int](namespaces.map(_.diskFreePercent).toList, 0).map(s => s / namespaces.size)
+          )
+      }
+  }
+
+  def getNamespacesInformation(node: Node): Seq[NamespaceInfo] = {
     Info
-      .request(null, node, s"sets/$namespace")
+      .request(null, node, "namespaces")
+      .split(';').toSeq
+      .map { namespace =>
+        val namespaceProperties = Info.request(null, node, s"namespace/$namespace")
+        NamespaceInfo(namespace, namespaceProperties)
+      }
+  }
+
+  def getSetsInformation(node: Node): Seq[SetInfo] = {
+    Info
+      .request(null, node, s"sets")
       .split(';')
-      .filter(!_.equals(""))
+      .filter(!_.equals("")).toSeq
       .map { setProperties =>
         SetInfo(setProperties)
       }
-      .map(n => (n.name, n))
-      .toMap
   }
 }

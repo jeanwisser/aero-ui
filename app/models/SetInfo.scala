@@ -5,6 +5,7 @@ import controllers.tools.MapHelper
 
 final case class SetInfo(
     name: String,
+    namespace: String,
     objectsCount: Long,
     memoryUsedBytes: Long,
     disableEviction: Boolean,
@@ -21,6 +22,7 @@ object SetInfo {
   def apply(properties: String): SetInfo = {
     val propertiesMap               = MapHelper.toMap(properties, ':')
     def getName: String             = MapHelper.getValue(propertiesMap, "set", _.toString)
+    def getNamespaceName: String    = MapHelper.getValue(propertiesMap, "ns", _.toString)
     def getObjects: Long            = MapHelper.getValue(propertiesMap, "objects", _.toLong)
     def getMemoryUsedBytes: Long    = MapHelper.getValue(propertiesMap, "memory_data_bytes", _.toLong)
     def getDisableEviction: Boolean = MapHelper.getValue(propertiesMap, "disable-eviction", _.toBoolean)
@@ -31,6 +33,7 @@ object SetInfo {
 
     SetInfo(
       getName,
+      getNamespaceName,
       getObjects,
       getMemoryUsedBytes,
       getDisableEviction,

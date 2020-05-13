@@ -2,7 +2,7 @@ package controllers
 
 import controllers.QueryForm.queryForm
 import javax.inject.Inject
-import models.{AerospikeContext, SetInfo}
+import models.{AerospikeContext, SetInfo, SetKey}
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class NamespaceController @Inject() (messagesAction: MessagesActionBuilder, components: ControllerComponents)(implicit ec: ExecutionContext)
     extends AbstractController(components) {
 
-  final case class NamespacePageContext(context: AerospikeContext, setsInfo: Map[String, SetInfo], selectedSet: SetInfo)
+  final case class NamespacePageContext(context: AerospikeContext, setsInfo: Map[SetKey, SetInfo], selectedSet: SetInfo)
 
   def namespace(host: String, port: Int, namespaceName: String): Action[AnyContent] =
     messagesAction { implicit request: MessagesRequest[AnyContent] =>
@@ -105,8 +105,8 @@ class NamespaceController @Inject() (messagesAction: MessagesActionBuilder, comp
     for {
       context           <- AerospikeContext(host, port)
       selectedNamespace <- context.getNamespaceInformation(namespace)
-      setsInfo          <- selectedNamespace.getNamespaceSets
-      selectedSet       <- selectedNamespace.getSetInformation(set.getOrElse(setsInfo.keys.head))
+      setsInfo          <- context.getNamespaceSets(namespace)
+      selectedSet       <- context.getSetInformation(namespace, set.getOrElse(setsInfo.keys.head.set))
     } yield NamespacePageContext(context, setsInfo, selectedSet)
   }
 }
