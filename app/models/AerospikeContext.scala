@@ -3,19 +3,20 @@ package models
 import com.aerospike.client.Info
 import com.aerospike.client.cluster.Node
 import controllers.tools.ListHelper
+import models.AerospikeContext._
 import models.client.Aerospike
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 class AerospikeContext(
     val client: Aerospike,
-    val nodes: List[NodeInfo],
-    val namespaces: Map[String, NamespaceInfo],
-    val sets: Map[SetKey, SetInfo]
+    val nodes: List[Node],
+    val namespaces: Map[String, NamespaceInfo]
 ) {
+  lazy val nodesInfo: List[NodeInfo]  = nodes.map(n => getNodeInformation(n))
+  lazy val sets: Map[SetKey, SetInfo] = getSetsInformationClusterWide(nodes)
 
   def getNamespaceInformation(namespace: String): Either[String, NamespaceInfo] = {
     namespaces.get(namespace) match {
@@ -65,11 +66,9 @@ object AerospikeContext {
     Aerospike(SeedNode(host, port)) match {
       case Failure(exception) => Left(exception.getMessage)
       case Success(client) =>
-        lazy val nodes      = getNodes(client)
-        lazy val namespaces = getNamespacesInformationClusterWide(nodes)
-        lazy val sets       = getSetsInformationClusterWide(nodes)
-        lazy val nodesInfo  = nodes.map(n => getNodeInformation(n))
-        Right(new AerospikeContext(client, nodesInfo, namespaces, sets))
+        val nodes      = getNodes(client)
+        val namespaces = getNamespacesInformationClusterWide(nodes)
+        Right(new AerospikeContext(client, nodes, namespaces))
     }
   }
 
@@ -114,11 +113,11 @@ object AerospikeContext {
             namespaces.head.storageEngine,
             namespaces.head.replicationFactor,
             namespaces.map(_.memoryUsedBytes).sum,
-            ListHelper.sumListRec[Long](namespaces.map(_.diskUsedBytes).toList, 0),
+            ListHelper.sumListRec[Long](namespaces.map(_.diskUsedBytes), 0),
             namespaces.map(_.memoryTotalSize).sum,
-            ListHelper.sumListRec[Long](namespaces.map(_.diskTotalSize).toList, 0),
+            ListHelper.sumListRec[Long](namespaces.map(_.diskTotalSize), 0),
             namespaces.map(_.memoryFreePercent).sum / namespaces.size,
-            ListHelper.sumListRec[Int](namespaces.map(_.diskFreePercent).toList, 0).map(s => s / namespaces.size)
+            ListHelper.sumListRec[Int](namespaces.map(_.diskFreePercent), 0).map(s => s / namespaces.size)
           )
       }
   }
@@ -126,7 +125,8 @@ object AerospikeContext {
   def getNamespacesInformation(node: Node): Seq[NamespaceInfo] = {
     Info
       .request(null, node, "namespaces")
-      .split(';').toSeq
+      .split(';')
+      .toSeq
       .map { namespace =>
         val namespaceProperties = Info.request(null, node, s"namespace/$namespace")
         NamespaceInfo(namespace, namespaceProperties)
@@ -137,7 +137,8 @@ object AerospikeContext {
     Info
       .request(null, node, s"sets")
       .split(';')
-      .filter(!_.equals("")).toSeq
+      .filter(!_.equals(""))
+      .toSeq
       .map { setProperties =>
         SetInfo(setProperties)
       }

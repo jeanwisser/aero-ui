@@ -14,7 +14,7 @@ class ClusterController @Inject() (messagesAction: MessagesActionBuilder, compon
       case Left(failureMessage) =>
         Redirect(routes.ClusterController.cluster(host, port)).flashing("exception" -> failureMessage)
       case Right(context) =>
-        Ok(views.html.cluster(host, port, context.nodes.toSet, context.namespaces.values.toList))
+        Ok(views.html.cluster(host, port, context.nodesInfo.toSet, context.namespaces.values.toList))
     }
   }
 }
