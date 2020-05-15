@@ -2,15 +2,13 @@ package controllers
 
 import controllers.QueryForm.queryForm
 import javax.inject.Inject
-import models.{AerospikeContext, SetInfo, SetKey}
+import models.{AerospikeContext, NamespacePage}
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class NamespaceController @Inject() (messagesAction: MessagesActionBuilder, components: ControllerComponents)(implicit ec: ExecutionContext)
     extends AbstractController(components) {
-
-  final case class NamespacePageContext(context: AerospikeContext, setsInfo: Map[SetKey, SetInfo], selectedSet: SetInfo)
 
   def namespace(host: String, port: Int, namespaceName: String): Action[AnyContent] =
     messagesAction { implicit request: MessagesRequest[AnyContent] =>
@@ -25,16 +23,16 @@ class NamespaceController @Inject() (messagesAction: MessagesActionBuilder, comp
   def getNamespacePage(host: String, port: Int, namespaceName: String, setName: Option[String])(
       implicit request: MessagesRequest[AnyContent]
   ): Result = {
-    getNamespacePageContext(host, port, namespaceName, setName) match {
+    NamespacePage(host, port, namespaceName, setName) match {
       case Left(failureMessage) =>
         Redirect(routes.ClusterController.cluster(host, port)).flashing("exception" -> failureMessage)
-      case Right(NamespacePageContext(context, setsInfo, selectedSet)) =>
+      case Right(NamespacePage(_, namespaces, setsInfo, selectedSet)) =>
         Ok(
           views.html
             .namespace(
               host,
               port,
-              context.namespaces.values.toList,
+              namespaces.values.toList,
               setsInfo.values.toList,
               namespaceName,
               selectedSet,
@@ -52,10 +50,10 @@ class NamespaceController @Inject() (messagesAction: MessagesActionBuilder, comp
           Future(Redirect(routes.NamespaceController.namespaceWithSet(host, port, namespaceName, setName)))
         },
         data => {
-          getNamespacePageContext(host, port, namespaceName, Some(setName)) match {
+          NamespacePage(host, port, namespaceName, Some(setName)) match {
             case Left(failureMessage) =>
               Future(Redirect(routes.ClusterController.cluster(host, port)).flashing("exception" -> failureMessage))
-            case Right(NamespacePageContext(context, setsInfo, selectedSet)) =>
+            case Right(NamespacePage(context, namespaces, setsInfo, selectedSet)) =>
               val record = context.getRecord(namespaceName, selectedSet.name, data.key)
               record.map {
                 case Left(failureMessage) =>
@@ -66,7 +64,7 @@ class NamespaceController @Inject() (messagesAction: MessagesActionBuilder, comp
                     views.html.namespace(
                       host,
                       port,
-                      context.namespaces.values.toList,
+                      namespaces.values.toList,
                       setsInfo.values.toList,
                       namespaceName,
                       selectedSet,
@@ -94,19 +92,5 @@ class NamespaceController @Inject() (messagesAction: MessagesActionBuilder, comp
                 .flashing("message" -> s"Record with PK = $key was successfully deleted from set $set")
           }
       }
-  }
-
-  private def getNamespacePageContext(
-      host: String,
-      port: Int,
-      namespace: String,
-      set: Option[String]
-  ): Either[String, NamespacePageContext] = {
-    for {
-      context           <- AerospikeContext(host, port)
-      selectedNamespace <- context.getNamespaceInformation(namespace)
-      setsInfo          <- context.getNamespaceSets(namespace)
-      selectedSet       <- context.getSetInformation(namespace, set.getOrElse(setsInfo.keys.head.set))
-    } yield NamespacePageContext(context, setsInfo, selectedSet)
   }
 }
