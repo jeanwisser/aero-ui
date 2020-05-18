@@ -1,14 +1,23 @@
 package models.client
 
+import java.util
+
 import com.aerospike.client._
 import com.aerospike.client.cluster.Node
-import com.aerospike.client.policy.{ClientPolicy, QueryPolicy, WritePolicy}
+import com.aerospike.client.policy.ClientPolicy
+import com.aerospike.client.policy.InfoPolicy
+import com.aerospike.client.policy.QueryPolicy
+import com.aerospike.client.policy.WritePolicy
 import models.SeedNode
+import Aerospike._
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import scala.jdk.CollectionConverters._
 
 class Aerospike(val connexion: AerospikeClient) {
 
@@ -22,6 +31,22 @@ class Aerospike(val connexion: AerospikeClient) {
     val wPolicy = new WritePolicy()
     wPolicy.setTimeout(3000)
     Try(connexion.delete(wPolicy, new Key(ns, set, key)))
+  }
+
+  def getInfo(node: Node, parameter: String): String = {
+    Info.request(getInfoPolicy, node, parameter)
+  }
+
+  def getInfo(node: Node, parameters: List[String]): Map[String, String] = {
+    val connection = node.getConnection(getInfoPolicy.timeout)
+    Try(Info.request(connection, parameters.asJava)) match {
+      case Success(result) =>
+        node.putConnection(connection)
+        result.asScala.toMap
+      case Failure(exception) =>
+        node.closeConnection(connection)
+        throw exception
+    }
   }
 
   def getNodes: Try[Array[Node]] = Try(connexion.getNodes)
@@ -51,13 +76,6 @@ object Aerospike {
     }
   }
 
-  def getDefaultPolicy: ClientPolicy = {
-    val cPolicy = new ClientPolicy()
-    cPolicy.timeout = 10000
-    cPolicy.maxConnsPerNode = 50
-    cPolicy
-  }
-
   def deleteConnectionFromPool(seedNode: SeedNode): Unit = {
     val aerospikeHost = new Host(seedNode.host, seedNode.port)
     if (connectionPool.contains(aerospikeHost.toString)) {
@@ -66,5 +84,18 @@ object Aerospike {
       }
       connectionPool.remove(aerospikeHost.toString)
     }
+  }
+
+  private def getDefaultPolicy: ClientPolicy = {
+    val cPolicy = new ClientPolicy()
+    cPolicy.timeout = 10000
+    cPolicy.maxConnsPerNode = 50
+    cPolicy
+  }
+
+  private def getInfoPolicy: InfoPolicy = {
+    val iPolicy = new InfoPolicy()
+    iPolicy.timeout = 3000
+    iPolicy
   }
 }

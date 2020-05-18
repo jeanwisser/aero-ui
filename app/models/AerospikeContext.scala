@@ -1,18 +1,12 @@
 package models
 
-import com.aerospike.client.Info
 import com.aerospike.client.cluster.Node
-import com.aerospike.client.policy.InfoPolicy
 import controllers.tools.ListHelper
 import models.client.Aerospike
-import AerospikeContext._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import scala.jdk.CollectionConverters._
+import scala.util.{Failure, Success, Try}
 
 class AerospikeContext(
     val client: Aerospike,
@@ -48,7 +42,7 @@ class AerospikeContext(
   def getNamespaceSets(namespace: String): Either[String, Map[String, SetInfo]] = {
     Try(
       nodes
-        .flatMap(node => getSetsInformation(namespace, node.aerospikeNode))
+        .flatMap(node => getSetsInformation(namespace, node))
         .groupBy(_.name)
         .map {
           case (name, sets) =>
@@ -93,14 +87,13 @@ class AerospikeContext(
   private def getNamespacesInformation(node: NodeInfo): Set[NamespaceInfo] = {
     node.namespaces
       .map { namespace =>
-        val namespaceProperties = Info.request(getInfoPolicy, node.aerospikeNode, s"namespace/$namespace")
+        val namespaceProperties = client.getInfo(node.aerospikeNode, s"namespace/$namespace")
         NamespaceInfo(namespace, namespaceProperties)
       }
   }
 
-  private def getSetsInformation(namespace: String, node: Node): Seq[SetInfo] = {
-    Info
-      .request(getInfoPolicy, node, s"sets/$namespace")
+  private def getSetsInformation(namespace: String, node: NodeInfo): Seq[SetInfo] = {
+    client.getInfo(node.aerospikeNode, s"sets/$namespace")
       .split(';')
       .filter(!_.equals(""))
       .toSeq
@@ -115,7 +108,7 @@ object AerospikeContext {
     val context = for {
       client    <- Aerospike(SeedNode(host, port))
       nodes     <- client.getNodes.map(_.toList)
-      nodeInfos <- getNodesInformation(nodes)
+      nodeInfos <- getNodesInformation(client, nodes)
     } yield new AerospikeContext(client, nodeInfos)
     context match {
       case Failure(exception) => Left(exception.toString)
@@ -123,16 +116,10 @@ object AerospikeContext {
     }
   }
 
-  private def getNodesInformation(nodes: List[Node]): Try[List[NodeInfo]] = {
+  private def getNodesInformation(client: Aerospike, nodes: List[Node]): Try[List[NodeInfo]] = {
     Try(nodes.map { node =>
-      val details = Info.request(node.getConnection(getInfoPolicy.timeout), List("build", "statistics", "namespaces").asJava)
-      NodeInfo(node.getName, node.getHost, node.isActive, details.get("build"), details.get("statistics"), details.get("namespaces"), node)
+      val details = client.getInfo(node, List("build", "statistics", "namespaces"))
+      NodeInfo(node.getName, node.getHost, node.isActive, details("build"), details("statistics"), details("namespaces"), node)
     })
-  }
-
-  private def getInfoPolicy: InfoPolicy = {
-    val iPolicy = new InfoPolicy()
-    iPolicy.timeout = 3000
-    iPolicy
   }
 }
