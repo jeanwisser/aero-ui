@@ -5,7 +5,7 @@ GET     /cluster/:host/:port                        controllers.ClusterControlle
 GET     /namespace/:host/:port/:name                controllers.NamespaceController.namespace(host: String, port: Int, name: String)
 GET     /namespace/:host/:port/:name/:set           controllers.NamespaceController.namespaceWithSet(host: String, port: Int, name: String, set: String)
 GET     /deleteRecord/:host/:port/:name/:set/:key   controllers.NamespaceController.deleteRecord(host: String, port: Int, name: String, set: String, key: String)
-POST    /namespace/:host/:port/:name                controllers.NamespaceController.handleQueryForm(host: String, port: Int, name: String, set: String)
+POST    /namespace/:host/:port/:name/:set           controllers.NamespaceController.handleQueryForm(host: String, port: Int, name: String, set: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
