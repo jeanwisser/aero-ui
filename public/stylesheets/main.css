@@ -70,7 +70,7 @@ nav.navbar {
 }
 
 .events-card .card-table {
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 
 .errors {

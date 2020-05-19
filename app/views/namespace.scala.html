@@ -42,9 +42,9 @@
                         <div class="field">
                             <label class="label">Set name</label>
                             <div class="select">
-                                <select>
+                                <select onChange="this.options[this.selectedIndex].onclick()">
                                     @for((set, index) <- sets.zipWithIndex) {
-                                    <option @if(selectedSet.name== set.name) {selected}
+                                    <option @if(selectedSet.name==set.name) {selected}
                                             onclick="location.href='@routes.NamespaceController.namespaceWithSet(host, port, selectedNamespaceName, set.name)'">
                                         @set.name
                                     </option>
