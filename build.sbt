@@ -2,7 +2,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 name := """aero-ui"""
 maintainer := "Jean Wisser"
-version := "0.6.3"
+version := "0.6.4"
 dockerRepository := Some("jeanwisser")
 dockerUpdateLatest := true
 
