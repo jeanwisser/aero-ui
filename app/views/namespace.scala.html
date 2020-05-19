@@ -159,7 +159,8 @@
                                 <div class="container">
                                     <nav class="level">
                                         <div class="level-left">
-                                            <a class="button is-success" href="@routes.NamespaceController.deleteRecord(host, port, selectedNamespaceName, selectedSet.name, record.get.key)">Yes</a>
+                                            <a class="button is-success"
+                                               href="@routes.NamespaceController.deleteRecord(host, port, selectedNamespaceName, selectedSet.name, record.get.key)">Yes</a>
                                         </div>
                                         <div class="level-left">
                                             <a id="confirm-delete-no" class="button" href="">Cancel</a>
@@ -169,6 +170,22 @@
                             </footer>
                         </div>
                     </div>
+                    <script type="text/javascript">
+                    document.querySelector('a#open-modal').addEventListener('click', function(event) {
+                      event.preventDefault();
+                      var modal = document.querySelector('.modal');
+                      var html = document.querySelector('html');
+                      modal.classList.add('is-active');
+                      html.classList.add('is-clipped');
+
+                      modal.querySelector('#confirm-delete-no').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        modal.classList.remove('is-active');
+                        html.classList.remove('is-clipped');
+                      });
+                    });
+
+                    </script>
                     }
                 </div>
             </section>
