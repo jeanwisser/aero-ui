@@ -95,7 +95,12 @@
                                         <td>@set.disableEviction</td>
                                         <td>@set.enableXdr</td>
                                         <td>@set.stopWritesCount</td>
+                                        @if(set.truncateLut > 0){
+                                        <td class="tooltip"><span class="tooltiptext">@set.getTruncateLutH</span>@set.truncateLut
+                                        </td>
+                                        } else{
                                         <td>@set.truncateLut</td>
+                                        }
                                         <td>@set.tombstones</td>
                                     </tr>
                                     }
@@ -135,7 +140,13 @@
                                                 </a></td>
                                             <td>@record.get.key</td>
                                             <td>@record.get.generation</td>
+                                            @if(record.get.expiration > 0){
+                                            <td class="tooltip"><span
+                                                    class="tooltiptext">@record.get.getExpirationH</span>@record.get.expiration
+                                            </td>
+                                            } else{
                                             <td>@record.get.expiration</td>
+                                            }
                                             @for(binValue <- record.get.bins.values){
                                             <td>@binValue</td>
                                             }
@@ -184,6 +195,9 @@
                         html.classList.remove('is-clipped');
                       });
                     });
+
+
+
 
                     </script>
                     }

@@ -134,3 +134,26 @@ margin: 1% 0 2% 0;
 .confirm{
  width: 20%;
 }
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 180px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -95px;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}

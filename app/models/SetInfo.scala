@@ -16,6 +16,7 @@ final case class SetInfo(
 ) {
   def getMemoryUsedBytesH: String = ReadableHelper.toHumanReadableBytes(memoryUsedBytes)
   def getObjectsCountH: String    = ReadableHelper.toHumanReadableNumber(objectsCount)
+  def getTruncateLutH: String = ReadableHelper.toHumanReadableDate(truncateLut)
 }
 
 object SetInfo {
